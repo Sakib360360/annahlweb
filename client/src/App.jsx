@@ -11,45 +11,48 @@ import TeacherDashboard from './pages/TeacherDashboard'
 import AdminDashboard from './pages/AdminDashboard'
 import PrivateRoute from './auth/PrivateRoute'
 import { AuthProvider } from './auth/AuthProvider'
+import { NotificationProvider } from './contexts/NotificationContext'
 
 export default function App() {
   return (
     <AuthProvider>
-      <Routes>
-        <Route path="/" element={<Layout />}>
-          <Route index element={<Home />} />
-          <Route path="about" element={<About />} />
-          <Route path="contact" element={<Contact />} />
-          <Route path="gallery" element={<Gallery />} />
-          <Route path="testimonials" element={<Testimonials />} />
-          <Route path="login" element={<Login />} />
+      <NotificationProvider>
+        <Routes>
+          <Route path="/" element={<Layout />}>
+            <Route index element={<Home />} />
+            <Route path="about" element={<About />} />
+            <Route path="contact" element={<Contact />} />
+            <Route path="gallery" element={<Gallery />} />
+            <Route path="testimonials" element={<Testimonials />} />
+            <Route path="login" element={<Login />} />
 
-          <Route
-            path="student-dashboard"
-            element={
-              <PrivateRoute allowedRoles={["student"]}>
-                <StudentDashboard />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="teacher-dashboard"
-            element={
-              <PrivateRoute allowedRoles={["teacher"]}>
-                <TeacherDashboard />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="admin-dashboard"
-            element={
-              <PrivateRoute allowedRoles={["admin"]}>
-                <AdminDashboard />
-              </PrivateRoute>
-            }
-          />
-        </Route>
-      </Routes>
+            <Route
+              path="student-dashboard"
+              element={
+                <PrivateRoute allowedRoles={["student"]}>
+                  <StudentDashboard />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="teacher-dashboard"
+              element={
+                <PrivateRoute allowedRoles={["teacher"]}>
+                  <TeacherDashboard />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="admin-dashboard"
+              element={
+                <PrivateRoute allowedRoles={["admin"]}>
+                  <AdminDashboard />
+                </PrivateRoute>
+              }
+            />
+          </Route>
+        </Routes>
+      </NotificationProvider>
     </AuthProvider>
   )
 }

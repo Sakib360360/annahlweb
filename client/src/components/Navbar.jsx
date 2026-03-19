@@ -1,5 +1,7 @@
 import { Link, NavLink } from 'react-router-dom'
 import { useEffect, useState } from 'react'
+import NotificationBell from './notifications/NotificationBell'
+import { useAuth } from '../auth/AuthProvider'
 
 const navItems = [
   { label: 'Home', to: '/' },
