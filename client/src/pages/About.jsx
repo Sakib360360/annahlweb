@@ -8,25 +8,25 @@ export default function About() {
         <div className="relative mx-auto max-w-6xl px-4 py-20">
           <div className="grid gap-10 lg:grid-cols-2 lg:items-center">
             <div>
-              <h1 className="text-4xl font-semibold text-brand-900 md:text-5xl">Our Mission & Vision</h1>
+              <h1 className="text-4xl font-semibold text-brand-900 md:text-5xl">Mission & Vision</h1>
               <p className="mt-6 max-w-xl text-lg text-slate-700">
-                At Al Nahal Academy, we are committed to developing confident, compassionate learners who uphold Islamic values while excelling in a modern world.
+                "An investment in balanced Islamic knowledge is an eternal investment for both worlds." Our mission is to nurture confident, knowledgeable, morally upright, and practicing young Muslim professionals, entrepreneurs, and leaders prepared for success in both Dunya and Akhirah.
               </p>
             </div>
             <div className="rounded-3xl border border-white/30 bg-white/70 p-10 shadow-soft backdrop-blur">
-              <h2 className="text-2xl font-semibold text-brand-900">Our core beliefs</h2>
+              <h2 className="text-2xl font-semibold text-brand-900">Leadership & Accreditation</h2>
               <ul className="mt-6 space-y-4 text-slate-700">
                 <li className="flex gap-3">
                   <span className="mt-1 inline-flex h-2 w-2 rounded-full bg-gold-500" />
-                  We foster a loving community where faith and knowledge grow together.
+                  <strong>Founding Principal:</strong> Shaikh Dr Abul Kalam Azad Madani (London) — Educationist, Curriculum Developer, Islamic Scholar.
                 </li>
                 <li className="flex gap-3">
                   <span className="mt-1 inline-flex h-2 w-2 rounded-full bg-gold-500" />
-                  We empower students with critical thinking and global competencies.
+                  <strong>Accreditation:</strong> Pearson Edexcel Approved Academy (IGCSE & A-Level exams via British Council).
                 </li>
                 <li className="flex gap-3">
                   <span className="mt-1 inline-flex h-2 w-2 rounded-full bg-gold-500" />
-                  We support individual growth through compassionate guidance and modern resources.
+                  <strong>Key distinction:</strong> Blending British Edexcel curriculum with Safeer Madani Islamic curriculum using authentic Prophetic pedagogy.
                 </li>
               </ul>
             </div>
@@ -37,42 +37,42 @@ export default function About() {
       <section className="mx-auto max-w-6xl px-4 py-16">
         <div className="grid gap-10 lg:grid-cols-2">
           <div className="rounded-3xl border border-white/30 bg-white/70 p-10 shadow-soft backdrop-blur">
-            <h2 className="text-2xl font-semibold text-brand-900">Islamic Foundation</h2>
+            <h2 className="text-2xl font-semibold text-brand-900">Islamic & Arabic Excellence</h2>
             <p className="mt-4 text-slate-700">
-              Our curriculum is grounded in Islam, encouraging students to practice kindness, responsibility, and discipline while learning core subjects.
+              We teach Qur'an with Tajweed, support structured Hifz programmes, and build Arabic language skills rooted in Qur'anic understanding.
             </p>
             <ul className="mt-6 space-y-4 text-slate-700">
               <li className="flex gap-3">
                 <span className="mt-1 inline-flex h-2 w-2 rounded-full bg-gold-500" />
-                Daily Quranic studies and Arabic language support.
+                Qur'an reading with Tajweed and memorization tracks.
               </li>
               <li className="flex gap-3">
                 <span className="mt-1 inline-flex h-2 w-2 rounded-full bg-gold-500" />
-                Character-building sessions and weekly tafsir discussions.
+                Arabic language with Qur'anic focus and guided grammar.
               </li>
               <li className="flex gap-3">
                 <span className="mt-1 inline-flex h-2 w-2 rounded-full bg-gold-500" />
-                Community service and ethical leadership programs.
+                Duas, Sunnah practices, Aqeedah, Fiqh, Seerah, and character development.
               </li>
             </ul>
           </div>
           <div className="rounded-3xl border border-white/30 bg-white/70 p-10 shadow-soft backdrop-blur">
-            <h2 className="text-2xl font-semibold text-brand-900">British Curriculum</h2>
+            <h2 className="text-2xl font-semibold text-brand-900">British Edexcel Curriculum</h2>
             <p className="mt-4 text-slate-700">
-              Our academic programme follows internationally recognized standards to prepare students for higher education and global opportunities.
+              As a Pearson Edexcel Approved Academy, we prepare students for International GCSE and A-Level examinations with world-class resources.
             </p>
             <ul className="mt-6 space-y-4 text-slate-700">
               <li className="flex gap-3">
                 <span className="mt-1 inline-flex h-2 w-2 rounded-full bg-gold-500" />
-                Structured learning paths from early years through A-Levels.
+                Subjects include English, Mathematics, Sciences, Computing, and Humanities.
               </li>
               <li className="flex gap-3">
                 <span className="mt-1 inline-flex h-2 w-2 rounded-full bg-gold-500" />
-                Emphasis on STEM, critical thinking, and creativity.
+                Focused exam preparation, critical thinking, and academic rigour.
               </li>
               <li className="flex gap-3">
                 <span className="mt-1 inline-flex h-2 w-2 rounded-full bg-gold-500" />
-                Exam preparation and university guidance built-in.
+                Strong emphasis on learner independence and future readiness.
               </li>
             </ul>
           </div>

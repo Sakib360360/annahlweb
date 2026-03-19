@@ -26,11 +26,11 @@ app.get('/', (req, res) => {
 })
 
 app.get('/api/students', (req, res) => {
-  res.json({ data: students })
+  res.json({ data: students.map(({ password, ...rest }) => rest) })
 })
 
 app.get('/api/teachers', (req, res) => {
-  res.json({ data: teachers })
+  res.json({ data: teachers.map(({ password, ...rest }) => rest) })
 })
 
 app.get('/api/admins', (req, res) => {
@@ -38,13 +38,22 @@ app.get('/api/admins', (req, res) => {
 })
 
 app.post('/api/login', (req, res) => {
-  const { email, password } = req.body || {}
+  const { id, password, email } = req.body || {}
 
-  if (!email || !password) {
-    return res.status(400).json({ message: 'Email and password are required' })
+  if ((!id && !email) || !password) {
+    return res.status(400).json({ message: 'ID (or email) and password are required' })
   }
 
-  const user = admins.find((admin) => admin.email === email && admin.password === password)
+  const credentialsMatch = (user) => {
+    if (!user) return false
+    if (user.password !== password) return false
+    if (id && user.id === id) return true
+    if (email && user.email === email) return true
+    return false
+  }
+
+  const allUsers = [...admins, ...teachers, ...students]
+  const user = allUsers.find(credentialsMatch)
 
   if (!user) {
     return res.status(401).json({ message: 'Invalid credentials' })

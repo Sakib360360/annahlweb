@@ -1,13 +1,31 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { login } from '../services/api'
+import { useEffect, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
+import { useAuth } from '../auth/AuthProvider'
 
 export default function Login() {
-  const [email, setEmail] = useState('')
+  const [id, setId] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const { login, user } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
+
+  const from = location.state?.from?.pathname || '/'
+
+  const roleRedirect = (role) => {
+    if (role === 'student') return '/student-dashboard'
+    if (role === 'teacher') return '/teacher-dashboard'
+    if (role === 'admin') return '/admin-dashboard'
+    return '/'
+  }
+
+  useEffect(() => {
+    if (user) {
+      const redirect = roleRedirect(user.role)
+      navigate(redirect, { replace: true })
+    }
+  }, [user, navigate])
 
   const handleSubmit = async (event) => {
     event.preventDefault()
@@ -15,8 +33,9 @@ export default function Login() {
     setError('')
 
     try {
-      await login({ email, password })
-      navigate('/')
+      const response = await login({ id, password })
+      const redirect = roleRedirect(response.user.role)
+      navigate(from === '/' ? redirect : from, { replace: true })
     } catch (err) {
       setError(err.message)
     } finally {
@@ -28,19 +47,18 @@ export default function Login() {
     <main className="flex-1 px-4 py-6">
       <div className="mx-auto max-w-md">
         <h1 className="text-3xl font-semibold">Login</h1>
-        <p className="mt-2 text-slate-600">Use an admin account to log into the demo backend.</p>
+        <p className="mt-2 text-slate-600">Log in with your ID and password to access your dashboard.</p>
 
         <form className="mt-8 space-y-4" onSubmit={handleSubmit}>
           <div>
-            <label className="block text-sm font-medium text-slate-700" htmlFor="email">
-              Email
+            <label className="block text-sm font-medium text-slate-700" htmlFor="id">
+              ID
             </label>
             <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 w-full rounded-md border border-slate-200 bg-white px-4 py-2 shadow-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200"
+              id="id"
+              value={id}
+              onChange={(e) => setId(e.target.value)}
+              className="mt-1 w-full rounded-md border border-slate-200 bg-white px-4 py-2 shadow-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
               required
             />
           </div>
@@ -53,7 +71,7 @@ export default function Login() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 w-full rounded-md border border-slate-200 bg-white px-4 py-2 shadow-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200"
+              className="mt-1 w-full rounded-md border border-slate-200 bg-white px-4 py-2 shadow-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
               required
             />
           </div>
@@ -63,17 +81,18 @@ export default function Login() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-md bg-sky-600 px-4 py-2 text-white shadow-sm transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-60"
+            className="w-full rounded-md bg-brand-600 px-4 py-2 text-white shadow-sm transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {loading ? 'Signing in…' : 'Sign in'}
           </button>
         </form>
 
-        <div className="mt-6 rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+        <div className="mt-6 rounded-lg border border-white/20 bg-white/70 p-4 text-sm text-slate-600">
           <p>
-            Try one of the sample admin accounts:
-            <strong className="block text-slate-800">fatima.sultana@annahlacademy.edu / admin123</strong>
-            <strong className="block text-slate-800">tariq.hasan@annahlacademy.edu / welcome2026</strong>
+            Try these sample IDs:
+            <strong className="block text-slate-800">Student: s1 / student123</strong>
+            <strong className="block text-slate-800">Teacher: t1 / teacher123</strong>
+            <strong className="block text-slate-800">Admin: a1 / admin123</strong>
           </p>
         </div>
       </div>

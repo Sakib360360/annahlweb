@@ -10,13 +10,13 @@ export default function Hero() {
         <div className="max-w-xl space-y-6">
           <p className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm font-semibold tracking-wide backdrop-blur-sm">
             <span className="inline-flex h-2 w-2 rounded-full bg-gold-400" />
-            Trusted Islamic education in Khulna
+            A Pioneering British Edexcel & Madani Safeer Academy
           </p>
           <h1 className="text-4xl font-semibold leading-tight tracking-tight md:text-5xl">
-            Nurturing minds with faith and excellence
+            AN-NAHL ACADEMY (أكاديمية النحل)
           </h1>
           <p className="text-lg text-white/85">
-            Al Nahal Academy blends modern British curriculum with strong Islamic values, empowering students for a bright future.
+            "An investment in balanced Islamic knowledge is an eternal investment for both worlds." — nurturing confident Muslim professionals, entrepreneurs, and leaders.
           </p>
 
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">

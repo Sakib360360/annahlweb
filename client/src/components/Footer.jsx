@@ -36,9 +36,11 @@ export default function Footer() {
           </div>
           <div>
             <p className="text-sm font-semibold text-white/90">Contact</p>
-            <p className="mt-3 text-sm text-white/70">123 Academy Lane, Khulna, Bangladesh</p>
-            <p className="text-sm text-white/70">+88 01234 567890</p>
-            <p className="text-sm text-white/70">info@annahlacademy.edu</p>
+            <p className="mt-3 text-sm text-white/70">140 Outer ByPass Road, Kolabagan Mor</p>
+            <p className="text-sm text-white/70">Choto Boira, Khulna 9000</p>
+            <p className="text-sm text-white/70">Admission: 01905-592130</p>
+            <p className="text-sm text-white/70">Office: 01905-592125</p>
+            <p className="text-sm text-white/70">official.annahlacademy@gmail.com</p>
           </div>
         </div>
         <div className="mt-10 border-t border-white/20 pt-6 text-center text-xs text-white/50">

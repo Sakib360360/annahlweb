@@ -2,25 +2,31 @@
   {
     "id": "s1",
     "name": "Ayesha Rahman",
+    "role": "student",
     "age": 14,
     "grade": "9",
     "email": "ayesha.rahman@example.com",
+    "password": "student123",
     "enrolledAt": "2022-06-01"
   },
   {
     "id": "s2",
     "name": "Rafi Khan",
+    "role": "student",
     "age": 16,
     "grade": "11",
     "email": "rafi.khan@example.com",
+    "password": "student123",
     "enrolledAt": "2021-03-15"
   },
   {
     "id": "s3",
     "name": "Nadia Islam",
+    "role": "student",
     "age": 13,
     "grade": "8",
     "email": "nadia.islam@example.com",
+    "password": "student123",
     "enrolledAt": "2023-01-10"
   }
 ]

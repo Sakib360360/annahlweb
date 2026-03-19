@@ -2,14 +2,16 @@
   {
     "id": "a1",
     "name": "Fatima Sultana",
-    "role": "Principal",
+    "role": "admin",
+    "title": "Principal",
     "email": "fatima.sultana@annahlacademy.edu",
     "password": "admin123"
   },
   {
     "id": "a2",
     "name": "Md. Tariq Hasan",
-    "role": "Vice Principal",
+    "role": "admin",
+    "title": "Vice Principal",
     "email": "tariq.hasan@annahlacademy.edu",
     "password": "welcome2026"
   }
