@@ -1,0 +1,13 @@
+{
+  "name": "webnahlupdate",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm:dev --prefix server\" \"npm:dev --prefix client\"",
+    "start": "concurrently \"npm:start --prefix server\" \"npm:preview --prefix client\"",
+    "lint": "echo \"No lint configured\"",
+    "test": "echo \"No tests configured\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.0"
+  }
+}

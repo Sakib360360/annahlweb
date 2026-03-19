@@ -1,0 +1,26 @@
+[
+  {
+    "id": "s1",
+    "name": "Ayesha Rahman",
+    "age": 14,
+    "grade": "9",
+    "email": "ayesha.rahman@example.com",
+    "enrolledAt": "2022-06-01"
+  },
+  {
+    "id": "s2",
+    "name": "Rafi Khan",
+    "age": 16,
+    "grade": "11",
+    "email": "rafi.khan@example.com",
+    "enrolledAt": "2021-03-15"
+  },
+  {
+    "id": "s3",
+    "name": "Nadia Islam",
+    "age": 13,
+    "grade": "8",
+    "email": "nadia.islam@example.com",
+    "enrolledAt": "2023-01-10"
+  }
+]
