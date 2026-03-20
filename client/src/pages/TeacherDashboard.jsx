@@ -231,7 +231,7 @@ export default function TeacherDashboard() {
   }
 
   const setSubjectGrade = (subject, grade) => {
-    updateDayRecord({ subjects: { ...dayRecord.subjects, [subject]: grade } })
+    updateDayRecord({ subjects: { ...((dayRecord && dayRecord.subjects) || {}), [subject]: grade } })
   }
 
   const addResource = (resource) => {
@@ -239,7 +239,8 @@ export default function TeacherDashboard() {
   }
 
   const dayAverage = useMemo(() => {
-    const values = Object.values(dayRecord.subjects).map((g) => {
+    const subjectValues = Object.values((dayRecord && dayRecord.subjects) || {})
+    const values = subjectValues.map((g) => {
       const idx = GRADE_OPTIONS.findIndex((opt) => opt.value === g)
       return idx >= 0 ? idx + 1 : 0
     })
@@ -255,7 +256,7 @@ export default function TeacherDashboard() {
 
     const allGrades = apData.weeks.flatMap((week) =>
       (week.days || []).flatMap((day) =>
-        Object.values(day.subjects || {}).map((g) => {
+        Object.values(((day && day.subjects) || {})).map((g) => {
           const idx = GRADE_OPTIONS.findIndex((opt) => opt.value === g)
           return idx >= 0 ? idx + 1 : 0
         }),
