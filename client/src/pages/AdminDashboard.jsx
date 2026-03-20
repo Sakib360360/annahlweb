@@ -39,7 +39,7 @@ export default function AdminDashboard() {
   const [students, setStudents] = useState([])
   const [teachers, setTeachers] = useState([])
   const [selectedTeacherId, setSelectedTeacherId] = useState('')
-  const [studentForm, setStudentForm] = useState({ id: '', name: '', email: '', grade: '', password: '' })
+  const [studentForm, setStudentForm] = useState({ id: '', name: '', email: '', grade: '', phone: '', sessionAdmitted: '', password: '' })
   const [teacherForm, setTeacherForm] = useState({ id: '', name: '', email: '', subject: '', password: '' })
   const [error, setError] = useState('')
 
@@ -220,6 +220,20 @@ export default function AdminDashboard() {
                         className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
                       />
                       <input
+                        value={studentForm.phone}
+                        onChange={(e) => setStudentForm((prev) => ({ ...prev, phone: e.target.value }))}
+                        placeholder="Phone"
+                        className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
+                      />
+                    </div>
+                    <div className="grid gap-3 md:grid-cols-2">
+                      <input
+                        value={studentForm.sessionAdmitted}
+                        onChange={(e) => setStudentForm((prev) => ({ ...prev, sessionAdmitted: e.target.value }))}
+                        placeholder="Session admitted"
+                        className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
+                      />
+                      <input
                         value={studentForm.password}
                         onChange={(e) => setStudentForm((prev) => ({ ...prev, password: e.target.value }))}
                         placeholder="Password"
@@ -255,6 +269,8 @@ export default function AdminDashboard() {
                           <th className="px-3 py-2">ID</th>
                           <th className="px-3 py-2">Name</th>
                           <th className="px-3 py-2">Grade</th>
+                          <th className="px-3 py-2">Phone</th>
+                          <th className="px-3 py-2">Session</th>
                           <th className="px-3 py-2">Actions</th>
                         </tr>
                       </thead>
@@ -264,6 +280,8 @@ export default function AdminDashboard() {
                             <td className="px-3 py-2 text-xs font-semibold text-slate-600">{student.id}</td>
                             <td className="px-3 py-2 text-sm text-slate-700">{student.name}</td>
                             <td className="px-3 py-2 text-sm text-slate-700">{student.grade}</td>
+                            <td className="px-3 py-2 text-sm text-slate-700">{student.phone || '-'}</td>
+                            <td className="px-3 py-2 text-sm text-slate-700">{student.sessionAdmitted || '-'}</td>
                             <td className="px-3 py-2 text-sm text-slate-700">
                               <button
                                 type="button"
@@ -272,6 +290,8 @@ export default function AdminDashboard() {
                                   name: student.name,
                                   email: student.email,
                                   grade: student.grade,
+                                  phone: student.phone || '',
+                                  sessionAdmitted: student.sessionAdmitted || '',
                                   password: '',
                                 })}
                                 className="mr-2 rounded-md bg-brand-50 px-2 py-1 text-xs font-semibold text-brand-700 transition hover:bg-brand-100"
