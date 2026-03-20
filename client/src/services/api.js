@@ -1,4 +1,4 @@
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api'
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001/api'
 
 export async function fetchStudents() {
   const res = await fetch(`${BASE_URL}/students`)
@@ -124,6 +124,13 @@ export async function upsertStudentProgress(teacherId, studentId, progress) {
   const payload = await res.json()
   if (!res.ok) throw new Error(payload?.message ?? 'Failed to save student progress')
   return payload.data
+}
+
+export async function fetchTeacherPerformance() {
+  const res = await fetch(`${BASE_URL}/admins/teacher-performance`)
+  if (!res.ok) throw new Error('Failed to fetch teacher performance')
+  const { data } = await res.json()
+  return data
 }
 
 export async function login({ id, email, password }) {

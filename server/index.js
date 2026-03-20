@@ -10,12 +10,30 @@ import Admin from './models/adminModel.js'
 
 const app = express()
 
-const MONGODB_URI =
-  process.env.MONGODB_URI ||
-  'mongodb+srv://saakibabrar_db_user_nahlweb:j1e7LynqW0ijWi7K@cluster0.fcoywyu.mongodb.net/anahl?appName=Cluster0&retryWrites=true&w=majority&tls=true'
+const {
+  MONGODB_URI,
+  MONGODB_USER,
+  MONGODB_PASS,
+  MONGODB_HOST,
+  MONGODB_DB,
+} = process.env
+
+const defaultUri = 'mongodb+srv://saakibabrar_db_user_nahlweb:j1e7LynqW0ijWi7K@cluster0.fcoywyu.mongodb.net/anahl?appName=Cluster0&retryWrites=true&w=majority&tls=true'
+
+const computedUri =
+  MONGODB_URI ||
+  (MONGODB_USER && MONGODB_PASS && MONGODB_HOST && MONGODB_DB
+    ? `mongodb+srv://${encodeURIComponent(MONGODB_USER)}:${encodeURIComponent(MONGODB_PASS)}@${MONGODB_HOST}/${MONGODB_DB}?retryWrites=true&w=majority&tls=true`
+    : null)
+
+const MONGO_CONNECTION_URI = computedUri || defaultUri
+
+if (!computedUri) {
+  console.warn('MongoDB credentials were not set in environment. Using default hardcoded URI; set MONGODB_URI or MONGODB_USER/MONGODB_PASS/MONGODB_HOST/MONGODB_DB for production.')
+}
 
 mongoose
-  .connect(MONGODB_URI, {
+  .connect(MONGO_CONNECTION_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
     ssl: true,
@@ -32,9 +50,9 @@ mongoose
         {
           id: 'a1',
           role: 'admin',
-          name: 'Fatima Sultana',
+          name: 'Dr. Abul Kalam Azad',
           title: 'Principal',
-          email: 'fatima.sultana@annahlacademy.edu',
+          email: 'official.annahlacademy@gmail.com',
           password: 'a123',
         },
         { upsert: true, new: true, setDefaultsOnInsert: true },

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid, Legend } from 'recharts'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
-import { getFromStorage, setInStorage } from '../utils/localStorage'
+import { fetchStudentProgress } from '../services/api'
 
 const SUBJECTS = ['Mathematics', 'English', 'Science', 'History', 'Art']
 const AP_LABELS = ['AP1', 'AP2', 'AP3', 'AP4', 'AP5', 'AP6']
@@ -25,7 +25,7 @@ function mapGradeToPoint(grade) {
 
 function getStudentProgress(user) {
   if (!user?.teacherId) return null
-  return getFromStorage(TEACHER_STUDENT_PROGRESS_KEY(user.teacherId, user.id), null)
+  return null
 }
 
 function computeChartData(progress, subject) {
@@ -139,8 +139,17 @@ export default function StudentDashboard() {
       return
     }
 
-    const prog = getStudentProgress(user)
-    setProgress(prog)
+    const loadProgress = async () => {
+      try {
+        const prog = await fetchStudentProgress(user.id)
+        setProgress(prog ?? { ap: {} })
+      } catch (error) {
+        console.error('Failed to fetch student progress from server', error)
+        setProgress({ ap: {} })
+      }
+    }
+
+    loadProgress()
 
     const stored = getFromStorage(getMessageKey(user.id), [])
     setMessages(stored)

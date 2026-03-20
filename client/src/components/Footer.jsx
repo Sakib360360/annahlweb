@@ -44,7 +44,7 @@ export default function Footer() {
           </div>
         </div>
         <div className="mt-10 border-t border-white/20 pt-6 text-center text-xs text-white/50">
-          © {new Date().getFullYear()} Al Nahal Academy. Built for demo purposes.
+          © {new Date().getFullYear()} Al Nahal Academy.
         </div>
       </div>
     </footer>

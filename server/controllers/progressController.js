@@ -57,3 +57,74 @@ export async function upsertStudentProgress(req, res) {
     return res.status(500).json({ message: error.message || 'Failed to update student progress' })
   }
 }
+
+function countCompletedWeeks(apProgress) {
+  const weeks = apProgress?.weeks || []
+  return weeks.reduce((count, week) => {
+    const hasEntry = (week.days || []).some((day) => day && day.subjects && Object.keys(day.subjects).length > 0)
+    return count + (hasEntry ? 1 : 0)
+  }, 0)
+}
+
+export async function getTeacherPerformance(req, res) {
+  try {
+    ensureMongo()
+    const teachers = await Teacher.find({}).lean()
+
+    const performance = await Promise.all(
+      teachers.map(async (teacher) => {
+        const students = await Student.find({ teacherId: teacher.id }).lean()
+        const studentProgress = await Promise.all(
+          students.map(async (student) => {
+            const prog = await StudentProgress.findOne({ teacherId: teacher.id, studentId: student.id }).lean()
+            return { studentId: student.id, prog }
+          }),
+        )
+
+        const APS = ['AP1', 'AP2', 'AP3', 'AP4', 'AP5', 'AP6']
+        const apScores = APS.map((ap) => {
+          const totalWeeksCompleted = studentProgress.reduce((sum, { prog }) => {
+            if (!prog || !prog.ap || !prog.ap[ap]) return sum
+            return sum + countCompletedWeeks(prog.ap[ap])
+          }, 0)
+
+          const expectedWeeks = 6 * students.length
+          const percentage = expectedWeeks ? totalWeeksCompleted / expectedWeeks : 0
+          const points = Math.round(percentage * 100)
+          return { ap, points }
+        })
+
+        const totalPoints = Math.round(apScores.reduce((sum, item) => sum + item.points, 0) / APS.length)
+
+        const today = new Date()
+        const dayIndex = ((today.getDay() + 6) % 7) - 1 // Mon=0..Sat=5 (approx)
+        const weekIndex = Math.min(5, Math.floor((today.getDate() - 1) / 7))
+
+        const missedToday = studentProgress.some(({ prog }) => {
+          if (!prog) return true
+          const todayProgress = APS.some((ap) => {
+            const week = prog.ap?.[ap]?.weeks?.[weekIndex]
+            if (!week) return true
+            const day = week.days?.[dayIndex]
+            return !(day && day.subjects && Object.keys(day.subjects).length > 0)
+          })
+          return todayProgress
+        })
+
+        return {
+          teacherId: teacher.id,
+          name: teacher.name,
+          apScores,
+          totalPoints,
+          missedToday,
+          studentsCount: students.length,
+        }
+      }),
+    )
+
+    return res.json({ data: performance })
+  } catch (error) {
+    console.error('getTeacherPerformance error', error)
+    return res.status(500).json({ message: 'Failed to fetch teacher performance' })
+  }
+}

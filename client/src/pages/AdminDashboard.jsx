@@ -11,6 +11,7 @@ import {
   deleteTeacher,
   fetchStudents,
   fetchTeachers,
+  fetchTeacherPerformance,
   updateStudent,
   updateTeacher,
 } from '../services/api'
@@ -65,6 +66,7 @@ export default function AdminDashboard() {
   const navigate = useNavigate()
   const [students, setStudents] = useState([])
   const [teachers, setTeachers] = useState([])
+  const [teacherPerformance, setTeacherPerformance] = useState([])
   const [selectedTeacherId, setSelectedTeacherId] = useState('')
   const [studentForm, setStudentForm] = useState({ id: '', name: '', email: '', grade: 'Nursery', phone: '', sessionAdmitted: '2024-2025', password: '' })
   const [teacherForm, setTeacherForm] = useState({
@@ -91,6 +93,7 @@ export default function AdminDashboard() {
 
     fetchStudents().then(setStudents).catch(() => setStudents([]))
     fetchTeachers().then(setTeachers).catch(() => setTeachers([]))
+    fetchTeacherPerformance().then(setTeacherPerformance).catch(() => setTeacherPerformance([]))
   }, [user, navigate])
 
   const groupedTeachers = useMemo(() => {
@@ -637,6 +640,33 @@ export default function AdminDashboard() {
                         <Bar dataKey="grade" name="Avg grade" fill="#2563eb" />
                       </BarChart>
                     </ResponsiveContainer>
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-slate-200 bg-white p-6">
+                  <h3 className="text-sm font-semibold text-slate-700">Teacher performance insights</h3>
+                  <p className="mt-1 text-xs text-slate-500">Each teacher starts with 100 points per AP for 6 weeks. Missing daily updates incur point reduction.</p>
+                  <div className="mt-4 overflow-auto">
+                    <table className="min-w-full text-left text-sm text-slate-700">
+                      <thead>
+                        <tr className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                          <th className="px-3 py-2">Teacher</th>
+                          <th className="px-3 py-2">Total</th>
+                          <th className="px-3 py-2">Missed Today</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {teacherPerformance.map((t) => (
+                          <tr key={t.teacherId} className="border-t border-slate-100 hover:bg-slate-50">
+                            <td className="px-3 py-2">{t.name}</td>
+                            <td className="px-3 py-2 font-semibold">{t.totalPoints}</td>
+                            <td className={`px-3 py-2 font-semibold ${t.missedToday ? 'text-rose-500' : 'text-emerald-600'}`}>
+                              {t.missedToday ? 'Missing update' : 'On track'}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
               </div>

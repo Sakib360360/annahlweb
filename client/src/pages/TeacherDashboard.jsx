@@ -129,9 +129,9 @@ export default function TeacherDashboard() {
   const [selectedStudentId, setSelectedStudentId] = useState(null)
   const [progress, setProgress] = useState(null)
 
-  const [selectedAP, setSelectedAP] = useState(APS[0])
-  const [selectedWeek, setSelectedWeek] = useState(1)
-  const [selectedDayIndex, setSelectedDayIndex] = useState(getTodayDayIndex())
+  const [selectedAP, setSelectedAP] = useState('')
+  const [selectedWeek, setSelectedWeek] = useState(null)
+  const [selectedDayIndex, setSelectedDayIndex] = useState(null)
 
   const [messageText, setMessageText] = useState('')
 
@@ -185,9 +185,9 @@ export default function TeacherDashboard() {
 
     loadProgress()
 
-    setSelectedAP(APS[0])
-    setSelectedWeek(1)
-    setSelectedDayIndex(getTodayDayIndex())
+    setSelectedAP('')
+    setSelectedWeek(null)
+    setSelectedDayIndex(null)
   }, [selectedStudent, user])
 
   const saveProgress = async (next) => {
@@ -367,9 +367,14 @@ export default function TeacherDashboard() {
                         <label className="text-sm font-semibold text-slate-700">Assessment period (AP)</label>
                         <select
                           value={selectedAP}
-                          onChange={(e) => setSelectedAP(e.target.value)}
+                          onChange={(e) => {
+                            setSelectedAP(e.target.value)
+                            setSelectedWeek(null)
+                            setSelectedDayIndex(null)
+                          }}
                           className="mt-2 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
                         >
+                          <option value="">Select AP</option>
                           {APS.map((ap) => (
                             <option key={ap} value={ap}>
                               {ap}
@@ -385,10 +390,13 @@ export default function TeacherDashboard() {
                             <button
                               key={week}
                               type="button"
+                              disabled={!selectedAP}
                               onClick={() => setSelectedWeek(week)}
                               className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
                                 selectedWeek === week
                                   ? 'bg-brand-600 text-white'
+                                  : !selectedAP
+                                  ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
                                   : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
                               }`}
                             >

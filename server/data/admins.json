@@ -1,18 +1,18 @@
 [
   {
     "id": "a1",
-    "name": "Fatima Sultana",
+    "name": "Dr. Abul Kalam Azad",
     "role": "admin",
     "title": "Principal",
-    "email": "fatima.sultana@annahlacademy.edu",
+    "email": "official.annahlacademy@gmail.com",
     "password": "a123"
   },
   {
     "id": "a2",
-    "name": "Md. Tariq Hasan",
+    "name": "Md. Sakib Abrar",
     "role": "admin",
-    "title": "Vice Principal",
-    "email": "tariq.hasan@annahlacademy.edu",
-    "password": "welcome2026"
+    "title": "Assistant Principal",
+    "email": "saakibabrar@gmail.com",
+    "password": "a123"
   }
 ]
