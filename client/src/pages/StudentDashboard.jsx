@@ -7,61 +7,59 @@ import { getFromStorage, setInStorage } from '../utils/localStorage'
 const SUBJECTS = ['Mathematics', 'English', 'Science', 'History', 'Art']
 const AP_LABELS = ['AP1', 'AP2', 'AP3', 'AP4', 'AP5', 'AP6']
 
-function seededRandom(seed) {
-  let h = 0
-  for (let i = 0; i < seed.length; i += 1) {
-    h = (h << 5) - h + seed.charCodeAt(i)
-    h |= 0
-  }
-  const value = Math.abs(Math.sin(h))
-  return value - Math.floor(value)
+const TEACHER_STUDENT_PROGRESS_KEY = (teacherId, studentId) => `anahl:teacher:${teacherId}:student:${studentId}:progress`
+
+const GRADE_TO_POINTS = {
+  E: 60,
+  S: 75,
+  B: 85,
+  EX: 95,
+  U: 50,
 }
 
-function buildInitialProgress(studentId) {
-  const baseSeed = `${studentId}::progress`
-  return {
-    generatedAt: new Date().toISOString(),
-    subjects: SUBJECTS.map((subject, subjectIndex) => {
-      const subjectSeed = `${baseSeed}::${subject}`
-      return {
-        name: subject,
-        ap: AP_LABELS.map((label, apIndex) => {
-          const seed = `${subjectSeed}::${label}`
-          const rand = seededRandom(seed)
-          const formative = Math.round(60 + rand * 30)
-          const summative = Math.min(100, formative + Math.round(rand * 20))
-          return { ap: label, formative, summative }
-        }),
-      }
-    }),
-  }
+function mapGradeToPoint(grade) {
+  if (!grade) return 0
+  const normalized = grade.toString().trim().toUpperCase()
+  return GRADE_TO_POINTS[normalized] ?? 0
 }
 
-function getStudentProgress(studentId) {
-  const key = `anahl:progress:${studentId}`
-  const existing = getFromStorage(key)
-  if (existing) return existing
-  const generated = buildInitialProgress(studentId)
-  setInStorage(key, generated)
-  return generated
+function getStudentProgress(user) {
+  if (!user?.teacherId) return null
+  return getFromStorage(TEACHER_STUDENT_PROGRESS_KEY(user.teacherId, user.id), null)
 }
 
 function computeChartData(progress, subject) {
+  if (!progress || !progress.ap) return []
+
   const rows = AP_LABELS.map((ap) => {
     const row = { ap }
-    const allValues = []
+    const subjectTotals = []
 
-    progress.subjects.forEach((sub) => {
-      const entry = sub.ap.find((a) => a.ap === ap)
-      if (!entry) return
-      const total = Math.round(entry.formative * 0.8 + entry.summative * 0.2)
+    SUBJECTS.forEach((sub) => {
+      const apData = progress.ap[ap]
+      if (!apData || !Array.isArray(apData.weeks)) return
+
+      const values = []
+      apData.weeks.forEach((week) => {
+        ;(week.days || []).forEach((day) => {
+          const grade = (day && day.subjects && day.subjects[sub]) || null
+          if (!grade) return
+          values.push(mapGradeToPoint(grade))
+        })
+      })
+
+      const formative = values.length ? Math.round(values.reduce((a, b) => a + b, 0) / values.length) : 0
+      const summative = Math.min(100, formative + 10)
+      const total = Math.round(formative * 0.8 + summative * 0.2)
+
       if (subject === null) {
-        row[sub.name] = total
+        row[sub] = total
       }
-      allValues.push(total)
+
+      subjectTotals.push(total)
     })
 
-    row.overall = allValues.length ? Math.round(allValues.reduce((a, b) => a + b, 0) / allValues.length) : 0
+    row.overall = subjectTotals.length ? Math.round(subjectTotals.reduce((a, b) => a + b, 0) / subjectTotals.length) : 0
     return row
   })
 
@@ -75,13 +73,41 @@ function downloadReportCard(student, progress) {
   lines.push(['Grade', student.grade ?? 'N/A'].join(','))
   lines.push(['', ''])
 
-  const header = ['Subject', ...AP_LABELS.map((ap) => `${ap} (F)`), ...AP_LABELS.map((ap) => `${ap} (S)`)].join(',')
+  const header = ['Subject', ...AP_LABELS.map((ap) => `${ap} (F)`), ...AP_LABELS.map((ap) => `${ap} (S)`), 'Average'].join(',')
   lines.push(header)
 
-  progress.subjects.forEach((subject) => {
-    const formative = subject.ap.map((a) => a.formative)
-    const summative = subject.ap.map((a) => a.summative)
-    lines.push([subject.name, ...formative, ...summative].join(','))
+  const computedAssessmentRows = SUBJECTS.map((subject) => {
+    const apScores = AP_LABELS.map((ap) => {
+      const apData = progress?.ap?.[ap]
+      if (!apData) return { formative: 0, summative: 0 }
+
+      const values = []
+      apData.weeks.forEach((week) => {
+        ;(week.days || []).forEach((day) => {
+          const grade = (day && day.subjects && day.subjects[subject]) || null
+          if (!grade) return
+          values.push(mapGradeToPoint(grade))
+        })
+      })
+
+      const formative = values.length ? Math.round(values.reduce((a, b) => a + b, 0) / values.length) : 0
+      const summative = Math.min(100, formative + 10)
+      return { formative, summative }
+    })
+
+    const average = apScores.length
+      ? Math.round(apScores.reduce((acc, curr) => acc + Math.round(curr.formative * 0.8 + curr.summative * 0.2), 0) / apScores.length)
+      : 0
+
+    return { subject, apScores, average }
+  })
+
+  computedAssessmentRows.forEach((subjectRow) => {
+    const formative = subjectRow.apScores.map((a) => a.formative)
+    const summative = subjectRow.apScores.map((a) => a.summative)
+    const total = subjectRow.apScores.map((a) => Math.round(a.formative * 0.8 + a.summative * 0.2))
+    const average = subjectRow.average || (total.length ? Math.round(total.reduce((a, b) => a + b, 0) / total.length) : 0)
+    lines.push([subjectRow.subject, ...formative, ...summative, average].join(','))
   })
 
   const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' })
@@ -113,7 +139,7 @@ export default function StudentDashboard() {
       return
     }
 
-    const prog = getStudentProgress(user.id)
+    const prog = getStudentProgress(user)
     setProgress(prog)
 
     const stored = getFromStorage(getMessageKey(user.id), [])
@@ -124,6 +150,36 @@ export default function StudentDashboard() {
     if (!progress) return []
     return computeChartData(progress, selectedSubject)
   }, [progress, selectedSubject])
+
+  const assessmentRows = useMemo(() => {
+    if (!progress || !progress.ap) return []
+
+    return SUBJECTS.map((subject) => {
+      const apScores = AP_LABELS.map((ap) => {
+        const apData = progress.ap[ap]
+        if (!apData || !Array.isArray(apData.weeks)) return { formative: 0, summative: 0, total: 0 }
+
+        const values = []
+        apData.weeks.forEach((week) => {
+          ;(week.days || []).forEach((day) => {
+            const grade = (day && day.subjects && day.subjects[subject]) || null
+            if (!grade) return
+            values.push(mapGradeToPoint(grade))
+          })
+        })
+
+        const formative = values.length ? Math.round(values.reduce((a, b) => a + b, 0) / values.length) : 0
+        const summative = Math.min(100, formative + 10)
+        const total = Math.round(formative * 0.8 + summative * 0.2)
+        return { formative, summative, total }
+      })
+
+      const average = apScores.length ? Math.round(apScores.reduce((acc, curr) => acc + curr.total, 0) / apScores.length) : 0
+
+      return { subject, apScores, average }
+    })
+  }, [progress])
+
 
   const handleSendMessage = () => {
     if (!newMessage.trim() || !user) return
@@ -262,46 +318,46 @@ export default function StudentDashboard() {
               <p className="mt-1 text-sm text-slate-600">Scores are weighted (80% formative, 20% summative).</p>
 
               <div className="mt-6 overflow-auto">
-                <table className="min-w-full text-left text-sm text-slate-700">
-                  <thead>
-                    <tr className="border-b border-slate-200">
-                      <th className="px-4 py-3">Subject</th>
-                      {AP_LABELS.map((ap) => (
-                        <th key={`${ap}-f`} className="px-4 py-3">
-                          {ap} (F)
-                        </th>
-                      ))}
-                      {AP_LABELS.map((ap) => (
-                        <th key={`${ap}-s`} className="px-4 py-3">
-                          {ap} (S)
-                        </th>
-                      ))}
-                      <th className="px-4 py-3">Average</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {progress?.subjects.map((subject) => {
-                      const totalScores = subject.ap.map((entry) => Math.round(entry.formative * 0.8 + entry.summative * 0.2))
-                      const average = Math.round(totalScores.reduce((a, b) => a + b, 0) / totalScores.length)
-                      return (
-                        <tr key={subject.name} className="hover:bg-slate-50">
-                          <td className="px-4 py-3 font-medium text-slate-800">{subject.name}</td>
-                          {subject.ap.map((entry) => (
-                            <td key={`${subject.name}-${entry.ap}-f`} className="px-4 py-3">
-                              {entry.formative}
+                {!assessmentRows.length ? (
+                  <p className="p-4 text-sm text-slate-600">No teacher-submitted progress yet. Your teacher should fill in assessment grades for real values.</p>
+                ) : (
+                  <table className="min-w-full text-left text-sm text-slate-700">
+                    <thead>
+                      <tr className="border-b border-slate-200">
+                        <th className="px-4 py-3">Subject</th>
+                        {AP_LABELS.map((ap) => (
+                          <th key={`${ap}-f`} className="px-4 py-3">
+                            {ap} (F)
+                          </th>
+                        ))}
+                        {AP_LABELS.map((ap) => (
+                          <th key={`${ap}-s`} className="px-4 py-3">
+                            {ap} (S)
+                          </th>
+                        ))}
+                        <th className="px-4 py-3">Average</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {assessmentRows.map(({ subject, apScores, average }) => (
+                        <tr key={subject} className="hover:bg-slate-50">
+                          <td className="px-4 py-3 font-medium text-slate-800">{subject}</td>
+                          {apScores.map(({ formative }, apIndex) => (
+                            <td key={`${subject}-${AP_LABELS[apIndex]}-f`} className="px-4 py-3">
+                              {formative === 0 ? '-' : formative}
                             </td>
                           ))}
-                          {subject.ap.map((entry) => (
-                            <td key={`${subject.name}-${entry.ap}-s`} className="px-4 py-3">
-                              {entry.summative}
+                          {apScores.map(({ summative }, apIndex) => (
+                            <td key={`${subject}-${AP_LABELS[apIndex]}-s`} className="px-4 py-3">
+                              {summative === 0 ? '-' : summative}
                             </td>
                           ))}
-                          <td className="px-4 py-3 font-semibold text-brand-900">{average}</td>
+                          <td className="px-4 py-3 font-semibold text-brand-900">{average || '-'}</td>
                         </tr>
-                      )
-                    })}
-                  </tbody>
-                </table>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
               </div>
             </div>
           </div>

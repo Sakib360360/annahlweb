@@ -1,7 +1,6 @@
 import mongoose from 'mongoose'
 import Student from '../models/studentModel.js'
 import Teacher from '../models/teacherModel.js'
-import { verifyCredentials, findUserById, findUserByEmail } from '../models/dataStore.js'
 
 async function verifyMongoCredentials({ id, email, password }) {
   const query = {}
@@ -21,6 +20,12 @@ async function verifyMongoCredentials({ id, email, password }) {
     return rest
   }
 
+  const admin = await mongoose.model('Admin').findOne(query).lean().catch(() => null)
+  if (admin && admin.password === password) {
+    const { password: _pw, __v, _id, ...rest } = admin
+    return rest
+  }
+
   return null
 }
 
@@ -31,26 +36,11 @@ export async function login(req, res) {
     return res.status(400).json({ message: 'Invalid login payload' })
   }
 
-  let user = null
-  if (id === 'a1' && password === 'a123') {
-    user = {
-      id: 'a1',
-      name: 'Fatima Sultana',
-      role: 'admin',
-      email: 'fatima.sultana@annahlacademy.edu',
-    }
+  if (mongoose.connection.readyState !== 1) {
+    return res.status(500).json({ message: 'MongoDB is required for authentication' })
   }
 
-  if (!user && mongoose.connection.readyState === 1) {
-    user = await verifyMongoCredentials({ id, email, password })
-  }
-
-  if (!user) {
-    const candidate = findUserById(id) || findUserByEmail(email)
-    if (candidate && candidate.password === password) {
-      user = candidate
-    }
-  }
+  const user = await verifyMongoCredentials({ id, email, password })
 
   if (!user) {
     return res.status(401).json({ message: 'Invalid credentials' })

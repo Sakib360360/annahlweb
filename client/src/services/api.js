@@ -105,6 +105,27 @@ export async function assignStudentToTeacher(studentId, teacherId) {
   return payload.data
 }
 
+export async function fetchStudentProgress(studentId) {
+  const res = await fetch(`${BASE_URL}/students/${studentId}/progress`)
+  if (!res.ok) {
+    if (res.status === 404) return null
+    throw new Error('Failed to fetch student progress')
+  }
+  const { data } = await res.json()
+  return data
+}
+
+export async function upsertStudentProgress(teacherId, studentId, progress) {
+  const res = await fetch(`${BASE_URL}/teachers/${teacherId}/students/${studentId}/progress`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(progress),
+  })
+  const payload = await res.json()
+  if (!res.ok) throw new Error(payload?.message ?? 'Failed to save student progress')
+  return payload.data
+}
+
 export async function login({ id, email, password }) {
   const res = await fetch(`${BASE_URL}/login`, {
     method: 'POST',

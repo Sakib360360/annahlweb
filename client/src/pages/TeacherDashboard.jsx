@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
 import { getFromStorage, setInStorage } from '../utils/localStorage'
-import { fetchStudents } from '../services/api'
+import { fetchStudents, fetchStudentProgress, upsertStudentProgress } from '../services/api'
 import { getConversation, sendMessage } from '../services/messages'
 import Card from '../components/ui/Card'
 import Button from '../components/ui/Button'
@@ -167,43 +167,39 @@ export default function TeacherDashboard() {
   useEffect(() => {
     if (!selectedStudent || !user) return
 
-    const key = teacherStudentProgressKey(user.id, selectedStudent.id)
-    const stored = getFromStorage(key, null)
+    const defaultProgress = buildEmptyProgress()
 
-    const base = stored ?? buildEmptyProgress()
-
-    // migrate old storage structure
-    if (stored && !stored.ap) {
-      const migrated = buildEmptyProgress()
-      migrated.messages = stored.messages || []
-      if (stored.weeks) {
-        stored.weeks.forEach((week, idx) => {
-          const day = buildEmptyDay()
-          if (week.dailyGrades) {
-            SUBJECTS.forEach((subject, subjectIdx) => {
-              day.subjects[subject] = week.dailyGrades[subjectIdx] || 'S'
-            })
-          }
-          migrated.ap[APS[0]].weeks[idx].days = [day]
-        })
+    const loadProgress = async () => {
+      try {
+        const existing = await fetchStudentProgress(selectedStudent.id)
+        if (existing) {
+          setProgress(existing)
+        } else {
+          setProgress(defaultProgress)
+        }
+      } catch (error) {
+        console.error('Failed to load student progress from Mongo:', error)
+        setProgress(defaultProgress)
       }
-      setProgress(migrated)
-      setInStorage(key, migrated)
-    } else {
-      setProgress(base)
     }
+
+    loadProgress()
 
     setSelectedAP(APS[0])
     setSelectedWeek(1)
     setSelectedDayIndex(getTodayDayIndex())
   }, [selectedStudent, user])
 
-  const saveProgress = (next) => {
+  const saveProgress = async (next) => {
     if (!selectedStudent || !user) return
-    const key = teacherStudentProgressKey(user.id, selectedStudent.id)
     const merged = { ...progress, ...next }
     setProgress(merged)
-    setInStorage(key, merged)
+
+    try {
+      await upsertStudentProgress(user.id, selectedStudent.id, merged)
+    } catch (error) {
+      console.error('Failed to save student progress to Mongo:', error)
+    }
   }
 
   const dayRecord = useMemo(() => {
