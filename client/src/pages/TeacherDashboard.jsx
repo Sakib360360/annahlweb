@@ -11,12 +11,24 @@ import StatCard from '../components/ui/StatCard'
 const CLASS_GROUPS = [
   'Nursery',
   'Reception',
-  'Year 1',
-  'Year 2',
-  'Year 3',
-  'Year 4',
-  'Year 5',
-  'Year 6',
+  'Year 1BG',
+  'Year 1G',
+  'Year 2B',
+  'Year 2G',
+  'Year 3B',
+  'Year 3G',
+  'Year 4B',
+  'Year 4G',
+  'Year 5B',
+  'Year 5G',
+  'Year 6B',
+  'Year 6G',
+  'Year 7B',
+  'Year 7G',
+  'Year 8B',
+  'Year 8G',
+  'Year 9B',
+  'Year 9G',
 ]
 
 const SUBJECTS = ['Mathematics', 'English', 'Science', 'History', 'Art']
@@ -32,12 +44,36 @@ const DAYS_PER_WEEK = 6
 
 const normalizeGroup = (grade) => {
   if (!grade) return 'Unknown'
-  const numeric = Number(grade)
-  if (!Number.isNaN(numeric)) {
-    if (numeric >= 1 && numeric <= 6) return `Year ${numeric}`
-    return 'Year 6'
+
+  if (typeof grade === 'string') {
+    const normalized = grade.trim()
+
+    // Keep exact class group labels for mapped year-group values
+    if (CLASS_GROUPS.includes(normalized)) return normalized
+
+    // Normalize numeric strings or 'Year X' values to group labels
+    const yearMatch = normalized.match(/^Year\s*(\d+)(B|G|BG)?$/i)
+    if (yearMatch) {
+      const yearNumber = Number(yearMatch[1])
+      const suffix = (yearMatch[2] || '').toUpperCase()
+      if (yearNumber >= 1 && yearNumber <= 9) {
+        if (suffix && ['B', 'G', 'BG'].includes(suffix)) {
+          return `Year ${yearNumber}${suffix}`
+        }
+        if (yearNumber <= 6) return `Year ${yearNumber}`
+        return `Year ${yearNumber}`
+      }
+    }
+
+    const numeric = Number(normalized)
+    if (!Number.isNaN(numeric)) {
+      if (numeric >= 1 && numeric <= 9) return `Year ${numeric}`
+    }
+
+    return normalized
   }
-  return grade
+
+  return 'Unknown'
 }
 
 const formatDate = (date) => date.toISOString().slice(0, 10)

@@ -92,7 +92,7 @@ export default function Login() {
             Try these sample IDs:
             <strong className="block text-slate-800">Student: s1 / student123</strong>
             <strong className="block text-slate-800">Teacher: t1 / teacher123</strong>
-            <strong className="block text-slate-800">Admin: a1 / admin123</strong>
+            <strong className="block text-slate-800">Admin: a1 / a123</strong>
           </p>
         </div>
       </div>

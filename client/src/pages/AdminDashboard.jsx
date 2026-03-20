@@ -15,11 +15,38 @@ import {
   updateTeacher,
 } from '../services/api'
 
+const YEAR_GROUP_OPTIONS = [
+  'Nursery',
+  'Reception',
+  'Year 1BG',
+  'Year 1G',
+  'Year 2B',
+  'Year 2G',
+  'Year 3B',
+  'Year 3G',
+  'Year 4B',
+  'Year 4G',
+  'Year 5B',
+  'Year 5G',
+  'Year 6B',
+  'Year 6G',
+  'Year 7B',
+  'Year 7G',
+  'Year 8B',
+  'Year 8G',
+  'Year 9B',
+  'Year 9G',
+]
+
+const SESSION_OPTIONS = ['2023-2024', '2024-2025', '2025-2026', '2026-2027']
+
 const GRADE_TO_GROUP = (grade) => {
-  const numeric = Number(grade)
-  if (Number.isNaN(numeric)) return grade || 'Unknown'
-  if (numeric >= 1 && numeric <= 7) return `Year ${numeric}`
-  return 'Year 8+'
+  if (!grade) return 'Unknown'
+  const normalized = grade.toString().trim()
+  if (YEAR_GROUP_OPTIONS.includes(normalized)) return normalized
+  if (/^\d+$/.test(normalized)) return `Year ${normalized}`
+  if (/^Year\s*\d+/i.test(normalized)) return normalized
+  return 'Unknown'
 }
 
 const getTeacherStudentStorageKey = (teacherId, studentId) => `anahl:teacher:${teacherId}:student:${studentId}`
@@ -39,8 +66,21 @@ export default function AdminDashboard() {
   const [students, setStudents] = useState([])
   const [teachers, setTeachers] = useState([])
   const [selectedTeacherId, setSelectedTeacherId] = useState('')
-  const [studentForm, setStudentForm] = useState({ id: '', name: '', email: '', grade: '', phone: '', sessionAdmitted: '', password: '' })
-  const [teacherForm, setTeacherForm] = useState({ id: '', name: '', email: '', subject: '', password: '' })
+  const [studentForm, setStudentForm] = useState({ id: '', name: '', email: '', grade: 'Nursery', phone: '', sessionAdmitted: '2024-2025', password: '' })
+  const [teacherForm, setTeacherForm] = useState({
+    id: '',
+    name: '',
+    email: '',
+    phone: '',
+    photoUrl: '',
+    joinedDate: '',
+    position: '',
+    department: '',
+    address: '',
+    education: '',
+    subject: '',
+    password: '',
+  })
   const [error, setError] = useState('')
 
   useEffect(() => {
@@ -121,7 +161,20 @@ export default function AdminDashboard() {
     try {
       const created = await createTeacher(teacherForm)
       setTeachers((prev) => [...prev, created])
-      setTeacherForm({ id: '', name: '', email: '', subject: '', password: '' })
+      setTeacherForm({
+        id: '',
+        name: '',
+        email: '',
+        phone: '',
+        photoUrl: '',
+        joinedDate: '',
+        position: '',
+        department: '',
+        address: '',
+        education: '',
+        subject: '',
+        password: '',
+      })
     } catch (err) {
       setError(err.message)
     }
@@ -132,7 +185,20 @@ export default function AdminDashboard() {
     try {
       const updated = await updateTeacher(id, teacherForm)
       setTeachers((prev) => prev.map((t) => (t.id === id ? updated : t)))
-      setTeacherForm({ id: '', name: '', email: '', subject: '', password: '' })
+      setTeacherForm({
+        id: '',
+        name: '',
+        email: '',
+        phone: '',
+        photoUrl: '',
+        joinedDate: '',
+        position: '',
+        department: '',
+        address: '',
+        education: '',
+        subject: '',
+        password: '',
+      })
       setSelectedTeacherId('')
     } catch (err) {
       setError(err.message)
@@ -213,12 +279,17 @@ export default function AdminDashboard() {
                       className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
                     />
                     <div className="grid gap-3 md:grid-cols-2">
-                      <input
+                      <select
                         value={studentForm.grade}
                         onChange={(e) => setStudentForm((prev) => ({ ...prev, grade: e.target.value }))}
-                        placeholder="Grade (e.g. 5)"
                         className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
-                      />
+                      >
+                        {YEAR_GROUP_OPTIONS.map((group) => (
+                          <option key={group} value={group}>
+                            {group}
+                          </option>
+                        ))}
+                      </select>
                       <input
                         value={studentForm.phone}
                         onChange={(e) => setStudentForm((prev) => ({ ...prev, phone: e.target.value }))}
@@ -227,12 +298,19 @@ export default function AdminDashboard() {
                       />
                     </div>
                     <div className="grid gap-3 md:grid-cols-2">
-                      <input
+                      <select
                         value={studentForm.sessionAdmitted}
                         onChange={(e) => setStudentForm((prev) => ({ ...prev, sessionAdmitted: e.target.value }))}
-                        placeholder="Session admitted"
                         className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
-                      />
+                        required
+                      >
+                        <option value="">Select session</option>
+                        {SESSION_OPTIONS.map((session) => (
+                          <option key={session} value={session}>
+                            {session}
+                          </option>
+                        ))}
+                      </select>
                       <input
                         value={studentForm.password}
                         onChange={(e) => setStudentForm((prev) => ({ ...prev, password: e.target.value }))}
@@ -344,6 +422,49 @@ export default function AdminDashboard() {
                       className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
                     />
                     <input
+                      value={teacherForm.phone}
+                      onChange={(e) => setTeacherForm((prev) => ({ ...prev, phone: e.target.value }))}
+                      placeholder="Phone"
+                      className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
+                    />
+                    <input
+                      value={teacherForm.photoUrl}
+                      onChange={(e) => setTeacherForm((prev) => ({ ...prev, photoUrl: e.target.value }))}
+                      placeholder="Photo URL"
+                      className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
+                    />
+                    <input
+                      value={teacherForm.joinedDate}
+                      onChange={(e) => setTeacherForm((prev) => ({ ...prev, joinedDate: e.target.value }))}
+                      placeholder="Joined Date"
+                      type="date"
+                      className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
+                    />
+                    <input
+                      value={teacherForm.position}
+                      onChange={(e) => setTeacherForm((prev) => ({ ...prev, position: e.target.value }))}
+                      placeholder="Position"
+                      className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
+                    />
+                    <input
+                      value={teacherForm.department}
+                      onChange={(e) => setTeacherForm((prev) => ({ ...prev, department: e.target.value }))}
+                      placeholder="Department"
+                      className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
+                    />
+                    <input
+                      value={teacherForm.address}
+                      onChange={(e) => setTeacherForm((prev) => ({ ...prev, address: e.target.value }))}
+                      placeholder="Address"
+                      className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
+                    />
+                    <input
+                      value={teacherForm.education}
+                      onChange={(e) => setTeacherForm((prev) => ({ ...prev, education: e.target.value }))}
+                      placeholder="Education"
+                      className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
+                    />
+                    <input
                       value={teacherForm.subject}
                       onChange={(e) => setTeacherForm((prev) => ({ ...prev, subject: e.target.value }))}
                       placeholder="Subject"
@@ -384,6 +505,8 @@ export default function AdminDashboard() {
                           <th className="px-3 py-2">ID</th>
                           <th className="px-3 py-2">Name</th>
                           <th className="px-3 py-2">Subject</th>
+                          <th className="px-3 py-2">Department</th>
+                          <th className="px-3 py-2">Joined</th>
                           <th className="px-3 py-2">Actions</th>
                         </tr>
                       </thead>
@@ -393,6 +516,8 @@ export default function AdminDashboard() {
                             <td className="px-3 py-2 text-xs font-semibold text-slate-600">{teacher.id}</td>
                             <td className="px-3 py-2 text-sm text-slate-700">{teacher.name}</td>
                             <td className="px-3 py-2 text-sm text-slate-700">{teacher.subject}</td>
+                            <td className="px-3 py-2 text-sm text-slate-700">{teacher.department || '-'}</td>
+                            <td className="px-3 py-2 text-sm text-slate-700">{teacher.joinedDate ? new Date(teacher.joinedDate).toLocaleDateString() : '-'}</td>
                             <td className="px-3 py-2 text-sm text-slate-700">
                               <button
                                 type="button"
@@ -400,7 +525,14 @@ export default function AdminDashboard() {
                                   id: teacher.id,
                                   name: teacher.name,
                                   email: teacher.email,
-                                  subject: teacher.subject,
+                                  phone: teacher.phone || '',
+                                  photoUrl: teacher.photoUrl || '',
+                                  joinedDate: teacher.joinedDate ? new Date(teacher.joinedDate).toISOString().slice(0, 10) : '',
+                                  position: teacher.position || '',
+                                  department: teacher.department || '',
+                                  address: teacher.address || '',
+                                  education: teacher.education || '',
+                                  subject: teacher.subject || '',
                                   password: '',
                                 })}
                                 className="mr-2 rounded-md bg-brand-50 px-2 py-1 text-xs font-semibold text-brand-700 transition hover:bg-brand-100"
