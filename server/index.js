@@ -6,6 +6,7 @@ import authRoutes from './routes/authRoutes.js'
 import studentRoutes from './routes/studentRoutes.js'
 import teacherRoutes from './routes/teacherRoutes.js'
 import adminRoutes from './routes/adminRoutes.js'
+import Admin from './models/adminModel.js'
 
 const app = express()
 
@@ -21,7 +22,28 @@ mongoose
     tls: true,
     tlsAllowInvalidCertificates: true,
   })
-  .then(() => console.log('MongoDB connected successfully'))
+  .then(async () => {
+    console.log('MongoDB connected successfully')
+
+    // Ensure default admin exists to support a1 / a123 credentials
+    try {
+      await Admin.findOneAndUpdate(
+        { id: 'a1' },
+        {
+          id: 'a1',
+          role: 'admin',
+          name: 'Fatima Sultana',
+          title: 'Principal',
+          email: 'fatima.sultana@annahlacademy.edu',
+          password: 'a123',
+        },
+        { upsert: true, new: true, setDefaultsOnInsert: true },
+      )
+      console.log('Default admin a1 / a123 ensured in MongoDB')
+    } catch (err) {
+      console.error('Failed to ensure default admin in MongoDB', err)
+    }
+  })
   .catch((error) => {
     console.error('MongoDB connection error:', error)
     console.warn('Continuing without MongoDB; fallback to in-memory data store active.')

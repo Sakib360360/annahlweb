@@ -114,7 +114,7 @@ const buildEmptyProgress = () => {
 
 const buildEmptyDay = () => ({
   subjects: SUBJECTS.reduce((acc, subject) => {
-    acc[subject] = 'S'
+    acc[subject] = ''
     return acc
   }, {}),
   resources: [],
