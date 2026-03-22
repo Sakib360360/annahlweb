@@ -1,3 +1,4 @@
+import 'dotenv/config'
 import express from 'express'
 import cors from 'cors'
 import mongoose from 'mongoose'
@@ -10,35 +11,23 @@ import Admin from './models/adminModel.js'
 
 const app = express()
 
-const {
-  MONGODB_URI,
-  MONGODB_USER,
-  MONGODB_PASS,
-  MONGODB_HOST,
-  MONGODB_DB,
-} = process.env
+const { MONGODB_URI } = process.env
 
-const defaultUri = 'mongodb+srv://saakibabrar_db_user_nahlweb:j1e7LynqW0ijWi7K@cluster0.fcoywyu.mongodb.net/anahl?appName=Cluster0&retryWrites=true&w=majority&tls=true'
+// use a stable DB name so data persists explicitly, not test db
+const defaultUri = 'mongodb+srv://saakibabrar_db_user_nahlweb:j1e7LynqW0ijWi7K@cluster0.fcoywyu.mongodb.net/anahl?retryWrites=true&w=majority'
 
-const computedUri =
-  MONGODB_URI ||
-  (MONGODB_USER && MONGODB_PASS && MONGODB_HOST && MONGODB_DB
-    ? `mongodb+srv://${encodeURIComponent(MONGODB_USER)}:${encodeURIComponent(MONGODB_PASS)}@${MONGODB_HOST}/${MONGODB_DB}?retryWrites=true&w=majority&tls=true`
-    : null)
+const MONGO_CONNECTION_URI = MONGODB_URI || defaultUri
 
-const MONGO_CONNECTION_URI = computedUri || defaultUri
-
-if (!computedUri) {
-  console.warn('MongoDB credentials were not set in environment. Using default hardcoded URI; set MONGODB_URI or MONGODB_USER/MONGODB_PASS/MONGODB_HOST/MONGODB_DB for production.')
+if (!MONGODB_URI) {
+  console.warn('MONGODB_URI not set in env. Using default hardcoded DB URI (mongo db: anahl).')
 }
+
+console.log('Mongo connection URI in use:', MONGO_CONNECTION_URI.replace(/(mongodb\+srv:\/\/.*?:).*?@/, '$1***@'))
 
 mongoose
   .connect(MONGO_CONNECTION_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
-    ssl: true,
-    tls: true,
-    tlsAllowInvalidCertificates: true,
   })
   .then(async () => {
     console.log('MongoDB connected successfully')
@@ -64,7 +53,8 @@ mongoose
   })
   .catch((error) => {
     console.error('MongoDB connection error:', error)
-    console.warn('Continuing without MongoDB; fallback to in-memory data store active.')
+    console.error('MongoDB is required; shutting down to avoid in-memory fallback data loss.')
+    process.exit(1)
   })
 
 app.use(cors({ origin: true }))
@@ -80,6 +70,11 @@ app.use('/api/teachers', teacherRoutes)
 app.use('/api/admins', adminRoutes)
 
 const PORT = process.env.PORT || 5001
-app.listen(PORT, () => {
-  console.log(`An Nahl Academy API running at http://localhost:${PORT}`)
-})
+
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`An Nahl Academy API running at http://localhost:${PORT}`)
+  })
+}
+
+export default app

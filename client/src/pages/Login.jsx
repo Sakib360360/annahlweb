@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
 
 export default function Login() {
-  const [id, setId] = useState('')
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -33,7 +33,10 @@ export default function Login() {
     setError('')
 
     try {
-      const response = await login({ id, password })
+      const payload = username.includes('@')
+        ? { email: username, password }
+        : { id: username, password }
+      const response = await login(payload)
       const redirect = roleRedirect(response.user.role)
       navigate(from === '/' ? redirect : from, { replace: true })
     } catch (err) {
@@ -51,14 +54,15 @@ export default function Login() {
 
         <form className="mt-8 space-y-4" onSubmit={handleSubmit}>
           <div>
-            <label className="block text-sm font-medium text-slate-700" htmlFor="id">
-              ID
+            <label className="block text-sm font-medium text-slate-700" htmlFor="username">
+              ID or Email
             </label>
             <input
-              id="id"
-              value={id}
-              onChange={(e) => setId(e.target.value)}
+              id="username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               className="mt-1 w-full rounded-md border border-slate-200 bg-white px-4 py-2 shadow-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
+              placeholder="a1 or a1@..."
               required
             />
           </div>

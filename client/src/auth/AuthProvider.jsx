@@ -22,17 +22,23 @@ export function AuthProvider({ children }) {
     setReady(true)
   }, [])
 
-  const login = async ({ id, password }) => {
-    const response = await apiLogin({ id, password })
-    setUser(response.user)
-    setToken(response.token)
+  const login = async ({ id, email, password }) => {
+    try {
+      const response = await apiLogin({ id, email, password })
+      setUser(response.user)
+      setToken(response.token)
 
-    localStorage.setItem(
-      'anahl:auth',
-      JSON.stringify({ user: response.user, token: response.token }),
-    )
+      localStorage.setItem(
+        'anahl:auth',
+        JSON.stringify({ user: response.user, token: response.token }),
+      )
 
-    return response
+      return response
+    } catch (error) {
+      setUser(null)
+      setToken(null)
+      throw error
+    }
   }
 
   const logout = () => {

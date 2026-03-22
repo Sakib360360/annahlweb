@@ -4,6 +4,12 @@ import Teacher from '../models/teacherModel.js'
 import Admin from '../models/adminModel.js'
 import { verifyCredentials as verifyMemoryCredentials } from '../models/dataStore.js'
 
+function verifyAdminMemoryCredentials({ id, email, password }) {
+  const candidate = verifyMemoryCredentials({ id, email, password })
+  if (!candidate || candidate.role !== 'admin') return null
+  return candidate
+}
+
 async function verifyMongoCredentials({ id, email, password }) {
   const query = {}
   if (id) query.id = id
@@ -45,10 +51,7 @@ export async function login(req, res) {
   }
 
   if (!user) {
-    const candidate = verifyMemoryCredentials({ id, email, password })
-    if (candidate) {
-      user = candidate
-    }
+    user = verifyAdminMemoryCredentials({ id, email, password })
   }
 
   if (!user) {

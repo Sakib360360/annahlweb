@@ -23,11 +23,11 @@ function isMongoConnected() {
 
 export async function listTeachers(req, res) {
   try {
-    if (isMongoConnected()) {
-      const teachers = await Teacher.find({}).lean()
-      return res.json({ data: teachers.map(sanitizeTeacher) })
+    if (!isMongoConnected()) {
+      return res.status(503).json({ message: 'MongoDB not connected' })
     }
-    return res.json({ data: getAllTeachersMemory() })
+    const teachers = await Teacher.find({}).lean()
+    return res.json({ data: teachers.map(sanitizeTeacher) })
   } catch (error) {
     console.error('listTeachers error', error)
     return res.status(500).json({ message: 'Failed to list teachers' })
@@ -36,13 +36,11 @@ export async function listTeachers(req, res) {
 
 export async function listStudentsByTeacher(req, res) {
   try {
-    const teacherId = req.params.id
-    if (isMongoConnected()) {
-      const students = await Student.find({ teacherId }).lean()
-      return res.json({ data: students })
+    if (!isMongoConnected()) {
+      return res.status(503).json({ message: 'MongoDB not connected' })
     }
-
-    const students = getAllStudentsMemory().filter((s) => s.teacherId === teacherId)
+    const teacherId = req.params.id
+    const students = await Student.find({ teacherId }).lean()
     return res.json({ data: students })
   } catch (error) {
     console.error('listStudentsByTeacher error', error)
@@ -52,13 +50,10 @@ export async function listStudentsByTeacher(req, res) {
 
 export async function getTeacher(req, res) {
   try {
-    if (isMongoConnected()) {
-      const teacher = await Teacher.findOne({ id: req.params.id }).select('-password -__v').lean()
-      if (!teacher) return res.status(404).json({ message: 'Teacher not found' })
-      return res.json({ data: teacher })
+    if (!isMongoConnected()) {
+      return res.status(503).json({ message: 'MongoDB not connected' })
     }
-
-    const teacher = getTeacherByIdMemory(req.params.id)
+    const teacher = await Teacher.findOne({ id: req.params.id }).select('-password -__v').lean()
     if (!teacher) return res.status(404).json({ message: 'Teacher not found' })
     return res.json({ data: teacher })
   } catch (error) {
@@ -87,60 +82,38 @@ export async function createTeacher(req, res) {
     return res.status(400).json({ message: 'Missing required teacher fields' })
   }
 
-  if (isMongoConnected()) {
-    try {
-      const existing = await Teacher.findOne({ $or: [{ id }, { email }] })
-      if (existing) {
-        return res.status(409).json({ message: 'Teacher ID or email already exists' })
-      }
+  if (!isMongoConnected()) {
+    return res.status(503).json({ message: 'MongoDB not connected' })
+  }
 
-      const teacher = new Teacher({
-        id,
-        name,
-        role: 'teacher',
-        email,
-        phone,
-        photoUrl,
-        joinedDate,
-        position,
-        department,
-        address,
-        education,
-        subject,
-        password,
-      })
-
-      const created = await teacher.save()
-      return res.status(201).json({ data: sanitizeTeacher(created) })
-    } catch (error) {
-      console.error('createTeacher error', error)
-      return res.status(500).json({ message: 'Failed to create teacher' })
+  try {
+    const existing = await Teacher.findOne({ $or: [{ id }, { email }] })
+    if (existing) {
+      return res.status(409).json({ message: 'Teacher ID or email already exists' })
     }
-  }
 
-  const existing = getTeacherByIdMemory(id)
-  if (existing) {
-    return res.status(409).json({ message: 'Teacher ID already exists' })
-  }
+    const teacher = new Teacher({
+      id,
+      name,
+      role: 'teacher',
+      email,
+      phone,
+      photoUrl,
+      joinedDate,
+      position,
+      department,
+      address,
+      education,
+      subject,
+      password,
+    })
 
-  const teacher = {
-    id,
-    name,
-    role: 'teacher',
-    email,
-    phone,
-    photoUrl,
-    joinedDate,
-    position,
-    department,
-    address,
-    education,
-    subject,
-    password,
+    const created = await teacher.save()
+    return res.status(201).json({ data: sanitizeTeacher(created) })
+  } catch (error) {
+    console.error('createTeacher error', error)
+    return res.status(500).json({ message: 'Failed to create teacher' })
   }
-
-  const created = addTeacherMemory(teacher)
-  return res.status(201).json({ data: created })
 }
 
 export async function updateTeacherController(req, res) {
@@ -148,18 +121,15 @@ export async function updateTeacherController(req, res) {
     const updates = req.body || {}
     updates.updatedAt = new Date()
 
-    if (isMongoConnected()) {
-      const updated = await Teacher.findOneAndUpdate({ id: req.params.id }, updates, {
-        new: true,
-        runValidators: true,
-      }).lean()
-      if (!updated) return res.status(404).json({ message: 'Teacher not found' })
-      return res.json({ data: sanitizeTeacher(updated) })
+    if (!isMongoConnected()) {
+      return res.status(503).json({ message: 'MongoDB not connected' })
     }
-
-    const updated = updateTeacherMemory(req.params.id, updates)
+    const updated = await Teacher.findOneAndUpdate({ id: req.params.id }, updates, {
+      new: true,
+      runValidators: true,
+    }).lean()
     if (!updated) return res.status(404).json({ message: 'Teacher not found' })
-    return res.json({ data: updated })
+    return res.json({ data: sanitizeTeacher(updated) })
   } catch (error) {
     console.error('updateTeacherController error', error)
     return res.status(500).json({ message: 'Failed to update teacher' })
@@ -168,13 +138,11 @@ export async function updateTeacherController(req, res) {
 
 export async function deleteTeacherController(req, res) {
   try {
-    if (isMongoConnected()) {
-      const deleted = await Teacher.findOneAndDelete({ id: req.params.id })
-      if (!deleted) return res.status(404).json({ message: 'Teacher not found' })
-      return res.status(204).end()
+    if (!isMongoConnected()) {
+      return res.status(503).json({ message: 'MongoDB not connected' })
     }
 
-    const deleted = deleteTeacherMemory(req.params.id)
+    const deleted = await Teacher.findOneAndDelete({ id: req.params.id })
     if (!deleted) return res.status(404).json({ message: 'Teacher not found' })
     return res.status(204).end()
   } catch (error) {

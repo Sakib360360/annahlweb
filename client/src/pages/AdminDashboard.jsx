@@ -20,7 +20,6 @@ const YEAR_GROUP_OPTIONS = [
   'Nursery',
   'Reception',
   'Year 1BG',
-  'Year 1G',
   'Year 2B',
   'Year 2G',
   'Year 3B',
@@ -128,10 +127,14 @@ export default function AdminDashboard() {
 
   const createNewStudent = async () => {
     setError('')
+    if (!studentForm.id || !studentForm.name || !studentForm.email || !studentForm.grade || !studentForm.password) {
+      setError('Please fill all required fields: ID, Name, Email, Grade, Password')
+      return
+    }
     try {
       const created = await createStudent(studentForm)
       setStudents((prev) => [...prev, created])
-      setStudentForm({ id: '', name: '', email: '', grade: '', password: '' })
+      setStudentForm({ id: '', name: '', email: '', grade: 'Nursery', phone: '', sessionAdmitted: '2024-2025', password: '' })
     } catch (err) {
       setError(err.message)
     }
@@ -161,6 +164,10 @@ export default function AdminDashboard() {
 
   const createNewTeacher = async () => {
     setError('')
+    if (!teacherForm.id || !teacherForm.name || !teacherForm.email || !teacherForm.subject || !teacherForm.password) {
+      setError('Please fill all required fields: ID, Name, Email, Subject, Password')
+      return
+    }
     try {
       const created = await createTeacher(teacherForm)
       setTeachers((prev) => [...prev, created])

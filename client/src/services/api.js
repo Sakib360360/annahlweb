@@ -133,18 +133,50 @@ export async function fetchTeacherPerformance() {
   return data
 }
 
-export async function login({ id, email, password }) {
-  const res = await fetch(`${BASE_URL}/login`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ id, email, password }),
-  })
+async function parseJsonResponse(res) {
+  try {
+    return await res.json()
+  } catch (error) {
+    return null
+  }
+}
 
-  const payload = await res.json()
+function withTimeout(promise, ms = 10000) {
+  return new Promise((resolve, reject) => {
+    const id = setTimeout(() => {
+      reject(new Error('Request timed out (10s)'))
+    }, ms)
+    promise
+      .then((res) => {
+        clearTimeout(id)
+        resolve(res)
+      })
+      .catch((err) => {
+        clearTimeout(id)
+        reject(err)
+      })
+  })
+}
+
+export async function login({ id, email, password }) {
+  console.log('[API] login request', { url: `${BASE_URL}/login`, id, email })
+  const res = await withTimeout(
+    fetch(`${BASE_URL}/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ id, email, password }),
+    }),
+    10000,
+  )
+
+  console.log('[API] login response', res.status)
+  const payload = await parseJsonResponse(res)
+  console.log('[API] login payload', payload)
+
   if (!res.ok) {
-    throw new Error(payload?.message ?? 'Login failed')
+    throw new Error(payload?.message ?? `Login failed (${res.status})`)
   }
 
   return payload
