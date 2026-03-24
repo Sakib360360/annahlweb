@@ -3,6 +3,7 @@ import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianG
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
 import { fetchStudentProgress } from '../services/api'
+import { getFromStorage, setInStorage } from '../utils/localStorage'
 
 const SUBJECTS = ['Mathematics', 'English', 'Science', 'History', 'Art']
 const AP_LABELS = ['AP1', 'AP2', 'AP3', 'AP4', 'AP5', 'AP6']

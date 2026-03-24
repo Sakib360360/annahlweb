@@ -12,7 +12,7 @@ function ensureMongo() {
 export async function getStudentProgress(req, res) {
   try {
     ensureMongo()
-    const { studentId } = req.params
+    const studentId = req.params.studentId ?? req.params.id
 
     const student = await Student.findOne({ id: studentId }).lean()
     if (!student) return res.status(404).json({ message: 'Student not found' })
