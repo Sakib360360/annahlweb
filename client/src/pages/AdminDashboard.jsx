@@ -9,10 +9,13 @@ import {
   createTeacher,
   deleteStudent,
   deleteTeacher,
+  fetchAdmins,
   fetchStudents,
   fetchTeachers,
   fetchTeacherPerformance,
+  fetchTasks,
   updateStudent,
+  updateTask,
   updateTeacher,
 } from '../services/api'
 
@@ -60,12 +63,34 @@ const computeCompletion = (teacher, assignedStudents) => {
   return Math.round((completed / assignedStudents.length) * 100)
 }
 
+const TASK_STATUSES = ['Pending', 'Ongoing', 'In Progress', 'Completed', 'Done']
+
+const TASK_PRIORITY_STYLE = {
+  High: 'bg-red-100 text-red-700 border-red-200',
+  Medium: 'bg-yellow-100 text-yellow-700 border-yellow-200',
+  Low: 'bg-green-100 text-green-700 border-green-200',
+}
+
+const TASK_STATUS_STYLE = {
+  Pending: 'bg-slate-100 text-slate-700 border-slate-200',
+  Ongoing: 'bg-amber-100 text-amber-700 border-amber-200',
+  'In Progress': 'bg-blue-100 text-blue-700 border-blue-200',
+  Completed: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+  Done: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+}
+
 export default function AdminDashboard() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const [students, setStudents] = useState([])
   const [teachers, setTeachers] = useState([])
   const [teacherPerformance, setTeacherPerformance] = useState([])
+  const [admins, setAdmins] = useState([])
+  const [tasks, setTasks] = useState([])
+  const [tasksLoading, setTasksLoading] = useState(true)
+  const [taskError, setTaskError] = useState('')
+  const [taskFilterStatus, setTaskFilterStatus] = useState('All')
+  const [activeTab, setActiveTab] = useState('operations')
   const [selectedTeacherId, setSelectedTeacherId] = useState('')
   const [studentForm, setStudentForm] = useState({ id: '', name: '', email: '', grade: 'Nursery', phone: '', sessionAdmitted: '2024-2025', password: '' })
   const [teacherForm, setTeacherForm] = useState({
@@ -93,7 +118,46 @@ export default function AdminDashboard() {
     fetchStudents().then(setStudents).catch(() => setStudents([]))
     fetchTeachers().then(setTeachers).catch(() => setTeachers([]))
     fetchTeacherPerformance().then(setTeacherPerformance).catch(() => setTeacherPerformance([]))
+    fetchAdmins().then(setAdmins).catch(() => setAdmins([]))
+
+    setTasksLoading(true)
+    fetchTasks()
+      .then((data) => {
+        setTasks(data || [])
+        setTaskError('')
+      })
+      .catch((err) => {
+        setTaskError(err?.message || 'Failed to load tasks')
+        setTasks([])
+      })
+      .finally(() => setTasksLoading(false))
   }, [user, navigate])
+
+  const myAdminProfile = useMemo(() => {
+    if (!user) return null
+    return admins.find((admin) => {
+      if (user.id && admin.id === user.id) return true
+      if (user.username && admin.username === user.username) return true
+      if (user.email && admin.email && admin.email === user.email) return true
+      return false
+    }) || null
+  }, [admins, user])
+
+  const assigneeKeys = useMemo(() => {
+    const keys = new Set()
+    if (user?.id) keys.add(user.id)
+    if (user?.username) keys.add(user.username)
+    if (user?.email) keys.add(user.email)
+    if (myAdminProfile?.id) keys.add(myAdminProfile.id)
+    if (myAdminProfile?.username) keys.add(myAdminProfile.username)
+    return Array.from(keys).filter(Boolean)
+  }, [user, myAdminProfile])
+
+  const assignedTasks = useMemo(() => {
+    const mine = tasks.filter((task) => assigneeKeys.includes(task.assignedTo))
+    if (taskFilterStatus === 'All') return mine
+    return mine.filter((task) => task.status === taskFilterStatus)
+  }, [tasks, assigneeKeys, taskFilterStatus])
 
   const groupedTeachers = useMemo(() => {
     return teachers.map((teacher) => {
@@ -234,6 +298,16 @@ export default function AdminDashboard() {
     }
   }
 
+  const updateMyTaskStatus = async (taskId, status) => {
+    setTaskError('')
+    try {
+      await updateTask(taskId, { status })
+      setTasks((prev) => prev.map((task) => (task._id === taskId ? { ...task, status } : task)))
+    } catch (err) {
+      setTaskError(err?.message || 'Failed to update task status')
+    }
+  }
+
   if (!user) return null
 
   return (
@@ -256,6 +330,34 @@ export default function AdminDashboard() {
           </div>
         </header>
 
+        <div className="rounded-2xl border border-white/30 bg-white/70 p-2 shadow-soft backdrop-blur">
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setActiveTab('operations')}
+              className={`rounded-xl px-4 py-2 text-sm font-semibold transition ${
+                activeTab === 'operations'
+                  ? 'bg-brand-600 text-white shadow'
+                  : 'bg-white text-slate-700 hover:bg-brand-50'
+              }`}
+            >
+              Operations
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('tasks')}
+              className={`rounded-xl px-4 py-2 text-sm font-semibold transition ${
+                activeTab === 'tasks'
+                  ? 'bg-brand-600 text-white shadow'
+                  : 'bg-white text-slate-700 hover:bg-brand-50'
+              }`}
+            >
+              My Assigned Tasks
+            </button>
+          </div>
+        </div>
+
+        {activeTab === 'operations' && (
         <div className="grid gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2 space-y-6">
             <section className="rounded-3xl border border-white/30 bg-white/70 p-8 shadow-soft backdrop-blur">
@@ -680,6 +782,67 @@ export default function AdminDashboard() {
             </div>
           </section>
         </div>
+        )}
+
+        {activeTab === 'tasks' && (
+          <section className="rounded-3xl border border-white/30 bg-white/70 p-8 shadow-soft backdrop-blur">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h2 className="text-xl font-semibold text-brand-900">My Assigned Tasks</h2>
+                <p className="mt-1 text-sm text-slate-600">Tasks assigned by management to your account. Update status as you progress.</p>
+              </div>
+              <select
+                value={taskFilterStatus}
+                onChange={(e) => setTaskFilterStatus(e.target.value)}
+                className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
+              >
+                <option value="All">All Statuses</option>
+                {TASK_STATUSES.map((status) => (
+                  <option key={status} value={status}>{status}</option>
+                ))}
+              </select>
+            </div>
+
+            {taskError && <p className="mt-4 text-sm text-rose-600">{taskError}</p>}
+
+            {tasksLoading ? (
+              <div className="mt-6 rounded-xl border border-slate-200 bg-white p-6 text-sm text-slate-500">Loading assigned tasks...</div>
+            ) : assignedTasks.length === 0 ? (
+              <div className="mt-6 rounded-xl border border-slate-200 bg-white p-6 text-sm text-slate-500">No tasks assigned to your account yet.</div>
+            ) : (
+              <div className="mt-6 space-y-3">
+                {assignedTasks.map((task) => (
+                  <div key={task._id} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <div className="mb-1 flex flex-wrap items-center gap-2">
+                          <h3 className="text-base font-semibold text-slate-800">{task.title}</h3>
+                          <span className={`rounded-full border px-2 py-0.5 text-xs font-semibold ${TASK_PRIORITY_STYLE[task.priority] || 'bg-slate-100 text-slate-700 border-slate-200'}`}>
+                            {task.priority}
+                          </span>
+                        </div>
+                        {task.description && <p className="text-sm text-slate-600">{task.description}</p>}
+                        <div className="mt-2 flex flex-wrap gap-3 text-xs text-slate-500">
+                          <span>Start: {task.startDate}</span>
+                          <span>Deadline: {task.deadline}</span>
+                        </div>
+                      </div>
+                      <select
+                        value={task.status}
+                        onChange={(e) => updateMyTaskStatus(task._id, e.target.value)}
+                        className={`rounded-xl border px-3 py-2 text-xs font-semibold focus:outline-none ${TASK_STATUS_STYLE[task.status] || 'bg-slate-100 text-slate-700 border-slate-200'}`}
+                      >
+                        {TASK_STATUSES.map((status) => (
+                          <option key={status} value={status}>{status}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
       </div>
     </main>
   )

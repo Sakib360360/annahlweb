@@ -1,5 +1,27 @@
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001/api'
 
+function getCurrentUserRole() {
+  if (typeof window === 'undefined') return ''
+
+  const mgmtSession = localStorage.getItem('mgmt_session')
+  if (mgmtSession) return 'management'
+
+  try {
+    const saved = localStorage.getItem('anahl:auth')
+    if (!saved) return ''
+    const parsed = JSON.parse(saved)
+    return parsed?.user?.role || ''
+  } catch {
+    return ''
+  }
+}
+
+function withRoleHeader(headers = {}) {
+  const role = getCurrentUserRole()
+  if (!role) return headers
+  return { ...headers, 'x-user-role': role }
+}
+
 export async function fetchStudents() {
   const res = await fetch(`${BASE_URL}/students`)
   if (!res.ok) throw new Error('Failed to fetch students')
@@ -199,7 +221,7 @@ export async function fetchTasks(params = {}) {
 export async function createTask(task) {
   const res = await fetch(`${BASE_URL}/tasks`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: withRoleHeader({ 'Content-Type': 'application/json' }),
     body: JSON.stringify(task),
   })
   const payload = await res.json()
@@ -210,7 +232,7 @@ export async function createTask(task) {
 export async function updateTask(id, data) {
   const res = await fetch(`${BASE_URL}/tasks/${id}`, {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
+    headers: withRoleHeader({ 'Content-Type': 'application/json' }),
     body: JSON.stringify(data),
   })
   const payload = await res.json()
@@ -221,7 +243,7 @@ export async function updateTask(id, data) {
 export async function addTaskComment(id, comment) {
   const res = await fetch(`${BASE_URL}/tasks/${id}/comments`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: withRoleHeader({ 'Content-Type': 'application/json' }),
     body: JSON.stringify({ comment }),
   })
   const payload = await res.json()
