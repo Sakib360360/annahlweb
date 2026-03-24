@@ -133,6 +133,58 @@ export async function fetchTeacherPerformance() {
   return data
 }
 
+export async function fetchAdmins() {
+  const res = await fetch(`${BASE_URL}/admins`)
+  if (!res.ok) throw new Error('Failed to fetch admins')
+  const { data } = await res.json()
+  return data
+}
+
+export async function fetchTasks(params = {}) {
+  const search = new URLSearchParams()
+  if (params.assignedTo) search.set('assignedTo', params.assignedTo)
+  if (params.status) search.set('status', params.status)
+  const suffix = search.toString() ? `?${search.toString()}` : ''
+
+  const res = await fetch(`${BASE_URL}/tasks${suffix}`)
+  if (!res.ok) throw new Error('Failed to fetch tasks')
+  const { data } = await res.json()
+  return data
+}
+
+export async function createTask(task) {
+  const res = await fetch(`${BASE_URL}/tasks`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(task),
+  })
+  const payload = await res.json()
+  if (!res.ok) throw new Error(payload?.message ?? 'Failed to create task')
+  return payload.data
+}
+
+export async function updateTask(id, data) {
+  const res = await fetch(`${BASE_URL}/tasks/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  })
+  const payload = await res.json()
+  if (!res.ok) throw new Error(payload?.message ?? 'Failed to update task')
+  return payload.data
+}
+
+export async function addTaskComment(id, comment) {
+  const res = await fetch(`${BASE_URL}/tasks/${id}/comments`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ comment }),
+  })
+  const payload = await res.json()
+  if (!res.ok) throw new Error(payload?.message ?? 'Failed to add task comment')
+  return payload.data
+}
+
 async function parseJsonResponse(res) {
   try {
     return await res.json()

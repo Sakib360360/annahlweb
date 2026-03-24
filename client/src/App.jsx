@@ -12,6 +12,18 @@ import AdminDashboard from './pages/AdminDashboard'
 import PrivateRoute from './auth/PrivateRoute'
 import { AuthProvider } from './auth/AuthProvider'
 import { NotificationProvider } from './contexts/NotificationContext'
+import Admission from './pages/Admission'
+import Curriculum from './pages/Curriculum'
+// Management
+import ManagementLogin from './pages/management/ManagementLogin'
+import ManagementLayout from './pages/management/ManagementLayout'
+import MgmtOverview from './pages/management/MgmtOverview'
+import MgmtStudents from './pages/management/MgmtStudents'
+import MgmtAcademic from './pages/management/MgmtAcademic'
+import MgmtAdministration from './pages/management/MgmtAdministration'
+import MgmtTaskDashboard from './pages/management/MgmtTaskDashboard'
+import MgmtTimeline from './pages/management/MgmtTimeline'
+import ManagementRoute from './auth/ManagementRoute'
 
 export default function App() {
   return (
@@ -25,6 +37,8 @@ export default function App() {
             <Route path="gallery" element={<Gallery />} />
             <Route path="testimonials" element={<Testimonials />} />
             <Route path="login" element={<Login />} />
+            <Route path="admission" element={<Admission />} />
+            <Route path="curriculum" element={<Curriculum />} />
 
             <Route
               path="student-dashboard"
@@ -50,6 +64,25 @@ export default function App() {
                 </PrivateRoute>
               }
             />
+          </Route>
+
+          {/* ── Management Dashboard ────────────── */}
+          <Route path="/management/login" element={<ManagementLogin />} />
+          <Route
+            path="/management"
+            element={
+              <ManagementRoute>
+                <ManagementLayout />
+              </ManagementRoute>
+            }
+          >
+            <Route index element={<MgmtOverview />} />
+            <Route path="overview" element={<MgmtOverview />} />
+            <Route path="students" element={<MgmtStudents />} />
+            <Route path="academic" element={<MgmtAcademic />} />
+            <Route path="administration" element={<MgmtAdministration />} />
+            <Route path="tasks" element={<MgmtTaskDashboard />} />
+            <Route path="timeline" element={<MgmtTimeline />} />
           </Route>
         </Routes>
       </NotificationProvider>

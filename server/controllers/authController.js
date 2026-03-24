@@ -4,6 +4,14 @@ import Teacher from '../models/teacherModel.js'
 import Admin from '../models/adminModel.js'
 import { verifyCredentials as verifyMemoryCredentials } from '../models/dataStore.js'
 
+const MANAGEMENT_CREDENTIALS = {
+  id: 'MN01',
+  password: 'MAN001',
+  role: 'management',
+  name: 'Management',
+  title: 'Top Level Access',
+}
+
 function verifyAdminMemoryCredentials({ id, email, password }) {
   const candidate = verifyMemoryCredentials({ id, email, password })
   if (!candidate || candidate.role !== 'admin') return null
@@ -46,7 +54,18 @@ export async function login(req, res) {
 
   let user = null
 
-  if (mongoose.connection.readyState === 1) {
+  const normalizedId = (id || '').trim().toUpperCase()
+  const normalizedPassword = String(password || '').trim()
+  if (normalizedId === MANAGEMENT_CREDENTIALS.id && normalizedPassword === MANAGEMENT_CREDENTIALS.password) {
+    user = {
+      id: MANAGEMENT_CREDENTIALS.id,
+      role: MANAGEMENT_CREDENTIALS.role,
+      name: MANAGEMENT_CREDENTIALS.name,
+      title: MANAGEMENT_CREDENTIALS.title,
+    }
+  }
+
+  if (!user && mongoose.connection.readyState === 1) {
     user = await verifyMongoCredentials({ id, email, password })
   }
 

@@ -6,6 +6,8 @@ import { useAuth } from '../auth/AuthProvider'
 const navItems = [
   { label: 'Home', to: '/' },
   { label: 'About', to: '/about' },
+  { label: 'Admission', to: '/admission' },
+  { label: 'Curriculum', to: '/curriculum' },
   { label: 'Gallery', to: '/gallery' },
   { label: 'Testimonials', to: '/testimonials' },
   { label: 'Contact', to: '/contact' },
@@ -46,11 +48,16 @@ export default function Navbar() {
       }`}
     >
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
-        <Link to="/" className="inline-flex items-center gap-2 text-xl font-semibold text-brand-900">
-          <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-brand-600 text-white shadow">
-            A
+        <Link to="/" className="inline-flex items-center gap-3 group">
+          <img
+            src="/logo.png"
+            alt="An-Nahl Academy Logo"
+            className="h-14 w-14 object-contain drop-shadow-md transition-transform duration-300 group-hover:scale-105"
+          />
+          <span className="flex flex-col leading-tight">
+            <span className="text-lg font-bold tracking-wide text-brand-900">An-Nahl Academy</span>
+            <span className="text-xs font-medium text-gold-600 tracking-wider">أكاديمية النحل</span>
           </span>
-          <span>Al Nahal Academy</span>
         </Link>
 
         <nav className="hidden items-center gap-2 md:flex">

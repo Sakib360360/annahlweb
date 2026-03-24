@@ -47,6 +47,9 @@ export default {
         float: 'float 6s ease-in-out infinite',
         fadeIn: 'fadeIn 0.5s ease-out forwards',
       },
+      transitionTimingFunction: {
+        'spring': 'cubic-bezier(0.34, 1.56, 0.64, 1)',
+      },
     },
   },
   plugins: [],

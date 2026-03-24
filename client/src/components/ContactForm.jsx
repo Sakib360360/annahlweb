@@ -56,6 +56,7 @@ export default function ContactForm() {
           <input
             value={form.name}
             onChange={handleChange('name')}
+            title="Enter your full name"
             className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
             placeholder="Your name"
           />
@@ -66,6 +67,7 @@ export default function ContactForm() {
             type="email"
             value={form.email}
             onChange={handleChange('email')}
+            title="Enter your email address"
             className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
             placeholder="you@example.com"
           />
@@ -78,6 +80,7 @@ export default function ContactForm() {
           value={form.message}
           onChange={handleChange('message')}
           rows={5}
+          title="Write your message"
           className="mt-2 w-full resize-none rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200"
           placeholder="Tell us a bit about your inquiry"
         />
@@ -89,6 +92,7 @@ export default function ContactForm() {
         </p>
         <button
           type="submit"
+          title="Submit contact form"
           className="inline-flex items-center justify-center rounded-xl bg-brand-600 px-6 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-brand-700"
         >
           Submit
