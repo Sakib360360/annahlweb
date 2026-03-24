@@ -69,6 +69,7 @@ async function verifyMongoCredentials({ id, email, password }) {
 
   const admin = await Admin.findOne(query).lean().catch(() => null)
   if (admin && admin.password === password) {
+    if (admin.active === false) return null
     const { password: _pw, __v, _id, ...rest } = admin
     await User.findOneAndUpdate(
       { username: admin.username || admin.id },

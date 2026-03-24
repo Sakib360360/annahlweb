@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
 
 function EyeIcon({ open }) {
@@ -16,12 +16,13 @@ function EyeIcon({ open }) {
 }
 
 export default function Login() {
+  const [selectedRole, setSelectedRole] = useState('')
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
-  const { login, user } = useAuth()
+  const { login, logout, user } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -47,18 +48,39 @@ export default function Login() {
     setLoading(true)
     setError('')
 
+    if (!selectedRole) {
+      setLoading(false)
+      setError('Please select a role before signing in.')
+      return
+    }
+
+    if (selectedRole === 'management') {
+      setLoading(false)
+      navigate('/management/login', { replace: true })
+      return
+    }
+
     try {
       const payload = username.includes('@')
         ? { email: username, password }
         : { id: username, password }
       const response = await login(payload)
-      if (response.user.role === 'management') {
+
+      const actualRole = response.user.role
+      if (actualRole !== selectedRole) {
+        logout()
+        localStorage.removeItem('mgmt_session')
+        setError(`This account belongs to ${actualRole}. Please select the correct role.`)
+        return
+      }
+
+      if (actualRole === 'management') {
         localStorage.setItem(
           'mgmt_session',
-          JSON.stringify({ username: response.user.id, loginAt: Date.now() }),
+          JSON.stringify({ username: response.user.username || response.user.id, loginAt: Date.now() }),
         )
       }
-      const redirect = roleRedirect(response.user.role)
+      const redirect = roleRedirect(actualRole)
       navigate(from === '/' ? redirect : from, { replace: true })
     } catch (err) {
       setError(err.message)
@@ -74,6 +96,33 @@ export default function Login() {
         <p className="mt-2 text-slate-600">Log in with your ID and password to access your dashboard.</p>
 
         <form className="mt-8 space-y-4" onSubmit={handleSubmit}>
+          <div>
+            <label className="block text-sm font-medium text-slate-700" htmlFor="role">
+              Which role?
+            </label>
+            <select
+              id="role"
+              value={selectedRole}
+              onChange={(e) => setSelectedRole(e.target.value)}
+              className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200 transition"
+              required
+            >
+              <option value="">Select role</option>
+              <option value="student">Student</option>
+              <option value="teacher">Teacher</option>
+              <option value="admin">Admin</option>
+              <option value="management">Management</option>
+            </select>
+            {selectedRole === 'management' && (
+              <div className="mt-2 rounded-lg border border-brand-200 bg-brand-50 px-3 py-2 text-sm text-brand-800">
+                Management uses a dedicated login page.
+                <Link to="/management/login" className="ml-1 font-semibold underline underline-offset-2 hover:text-brand-900">
+                  Go to Management Login
+                </Link>
+              </div>
+            )}
+          </div>
+
           <div>
             <label className="block text-sm font-medium text-slate-700" htmlFor="username">
               ID or Email

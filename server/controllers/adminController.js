@@ -38,6 +38,7 @@ export async function createAdmin(req, res) {
       profilePhoto,
       role,
       active,
+      joinedDate,
     } = req.body || {}
 
     if (!name || !username || !password) {
@@ -60,6 +61,7 @@ export async function createAdmin(req, res) {
       phone: phone || '',
       profilePhoto: profilePhoto || '',
       active: active !== false,
+      joinedDate: joinedDate || '',
       password,
     })
 
@@ -84,11 +86,19 @@ export async function createAdmin(req, res) {
   }
 }
 
+function findQuery(paramId) {
+  // Accept either a MongoDB ObjectId hex string or the custom string id (e.g. "a1")
+  if (mongoose.Types.ObjectId.isValid(paramId) && String(paramId).length === 24) {
+    return { $or: [{ _id: new mongoose.Types.ObjectId(paramId) }, { id: paramId }] }
+  }
+  return { id: paramId }
+}
+
 export async function updateAdmin(req, res) {
   try {
     if (!isMongoConnected()) return res.status(503).json({ message: 'MongoDB not connected' })
 
-    const admin = await Admin.findOne({ id: req.params.id })
+    const admin = await Admin.findOne(findQuery(req.params.id))
     if (!admin) return res.status(404).json({ message: 'Admin not found' })
 
     const updates = req.body || {}
@@ -120,7 +130,7 @@ export async function deleteAdmin(req, res) {
   try {
     if (!isMongoConnected()) return res.status(503).json({ message: 'MongoDB not connected' })
 
-    const deleted = await Admin.findOneAndDelete({ id: req.params.id }).lean()
+    const deleted = await Admin.findOneAndDelete(findQuery(req.params.id)).lean()
     if (!deleted) return res.status(404).json({ message: 'Admin not found' })
 
     await User.findOneAndDelete({ username: deleted.username })
@@ -136,18 +146,21 @@ export async function toggleAdminStatus(req, res) {
   try {
     if (!isMongoConnected()) return res.status(503).json({ message: 'MongoDB not connected' })
 
-    const { active } = req.body || {}
+    // Find current record first so we can flip the actual boolean
+    const existing = await Admin.findOne(findQuery(req.params.id)).lean()
+    if (!existing) return res.status(404).json({ message: 'Admin not found' })
+
+    const newActive = !existing.active
+
     const updated = await Admin.findOneAndUpdate(
-      { id: req.params.id },
-      { active: active !== false },
+      findQuery(req.params.id),
+      { active: newActive },
       { new: true, runValidators: true },
     ).lean()
 
-    if (!updated) return res.status(404).json({ message: 'Admin not found' })
-
     await User.findOneAndUpdate(
       { username: updated.username },
-      { active: updated.active !== false },
+      { active: newActive },
       { new: true },
     )
 

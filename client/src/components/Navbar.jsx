@@ -68,7 +68,7 @@ export default function Navbar() {
             to="/login"
             className="rounded-lg bg-gold-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-gold-600"
           >
-            Admin Login
+            Login
           </Link>
         </nav>
 
@@ -104,7 +104,7 @@ export default function Navbar() {
               onClick={() => setOpen(false)}
               className="block rounded-lg bg-gold-500 px-3 py-2 text-base font-semibold text-white transition hover:bg-gold-600"
             >
-              Admin Login
+              Login
             </Link>
           </div>
         </nav>

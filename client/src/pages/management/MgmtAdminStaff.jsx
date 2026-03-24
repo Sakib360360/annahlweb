@@ -289,21 +289,21 @@ export default function MgmtAdminStaff() {
                       {admin.joinedDate ? admin.joinedDate.slice(0, 10) : '—'}
                     </td>
                     <td className="px-5 py-4">
-                      <Badge active={admin.isActive !== false} />
+                      <Badge active={admin.active !== false} />
                     </td>
                     <td className="px-5 py-4">
                       <div className="flex items-center justify-end gap-2">
                         {/* Toggle */}
                         <button
                           onClick={() => handleToggle(admin)}
-                          title={admin.isActive !== false ? 'Deactivate' : 'Activate'}
+                          title={admin.active !== false ? 'Deactivate' : 'Activate'}
                           className={`rounded-lg p-1.5 text-xs font-medium transition-colors ${
-                            admin.isActive !== false
+                            admin.active !== false
                               ? 'bg-amber-50 text-amber-600 hover:bg-amber-100'
                               : 'bg-green-50 text-green-600 hover:bg-green-100'
                           }`}
                         >
-                          {admin.isActive !== false ? (
+                          {admin.active !== false ? (
                             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
                             </svg>

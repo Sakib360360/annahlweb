@@ -77,6 +77,7 @@ export default function ManagementLayout() {
 
   function logout() {
     localStorage.removeItem('mgmt_session')
+    localStorage.removeItem('anahl:auth')
     navigate('/management/login', { replace: true })
   }
 
