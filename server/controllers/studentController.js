@@ -1,5 +1,6 @@
 import mongoose from 'mongoose'
 import Student from '../models/studentModel.js'
+import User from '../models/userModel.js'
 import {
   addStudent as addStudentMemory,
   deleteStudent as deleteStudentMemory,
@@ -58,8 +59,23 @@ export async function getStudent(req, res) {
 }
 
 export async function createStudent(req, res) {
-  const { id, name, email, grade, password, phone, sessionAdmitted, teacherId } = req.body || {}
-  if (!id || !name || !email || !grade || !password) {
+  const {
+    id,
+    username,
+    name,
+    email,
+    grade,
+    section,
+    roll,
+    parentName,
+    phone,
+    address,
+    photo,
+    password,
+    sessionAdmitted,
+    teacherId,
+  } = req.body || {}
+  if (!id || !username || !name || !grade || !password) {
     return res.status(400).json({ message: 'Missing required student fields' })
   }
 
@@ -67,24 +83,44 @@ export async function createStudent(req, res) {
     if (!isMongoConnected()) {
       return res.status(503).json({ message: 'MongoDB not connected' })
     }
-    const existing = await Student.findOne({ $or: [{ id }, { email }] })
+    const existing = await Student.findOne({ $or: [{ id }, { username }, ...(email ? [{ email }] : [])] })
     if (existing) {
-      return res.status(409).json({ message: 'Student ID or email already exists' })
+      return res.status(409).json({ message: 'Student ID, username, or email already exists' })
     }
 
     const student = new Student({
       id,
+      username,
       name,
       role: 'student',
       grade,
-      email,
+      email: email || `${username}@student.local`,
+      section,
+      roll,
+      parentName,
       phone,
+      address,
+      photo,
       sessionAdmitted,
       password,
       teacherId: teacherId || null,
     })
 
     const created = await student.save()
+
+    await User.findOneAndUpdate(
+      { username },
+      {
+        username,
+        email: email || `${username}@student.local`,
+        password,
+        role: 'student',
+        name,
+        active: true,
+      },
+      { upsert: true, new: true },
+    )
+
     return res.status(201).json({ data: sanitizeStudent(created) })
   } catch (error) {
     console.error('createStudent error', error)
@@ -106,6 +142,20 @@ export async function updateStudentController(req, res) {
       runValidators: true,
     }).lean()
     if (!updated) return res.status(404).json({ message: 'Student not found' })
+
+    await User.findOneAndUpdate(
+      { username: updated.username || updated.id },
+      {
+        username: updated.username || updated.id,
+        email: updated.email,
+        password: updated.password,
+        role: 'student',
+        name: updated.name,
+        active: true,
+      },
+      { upsert: true, new: true },
+    )
+
     return res.json({ data: sanitizeStudent(updated) })
   } catch (error) {
     console.error('updateStudentController error', error)
@@ -120,6 +170,9 @@ export async function deleteStudentController(req, res) {
     }
     const deleted = await Student.findOneAndDelete({ id: req.params.id })
     if (!deleted) return res.status(404).json({ message: 'Student not found' })
+
+    await User.findOneAndDelete({ username: deleted.username || deleted.id })
+
     return res.status(204).end()
   } catch (error) {
     console.error('deleteStudentController error', error)

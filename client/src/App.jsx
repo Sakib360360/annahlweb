@@ -23,6 +23,7 @@ import MgmtAcademic from './pages/management/MgmtAcademic'
 import MgmtAdministration from './pages/management/MgmtAdministration'
 import MgmtTaskDashboard from './pages/management/MgmtTaskDashboard'
 import MgmtTimeline from './pages/management/MgmtTimeline'
+import MgmtAdminStaff from './pages/management/MgmtAdminStaff'
 import ManagementRoute from './auth/ManagementRoute'
 
 export default function App() {
@@ -83,6 +84,7 @@ export default function App() {
             <Route path="administration" element={<MgmtAdministration />} />
             <Route path="tasks" element={<MgmtTaskDashboard />} />
             <Route path="timeline" element={<MgmtTimeline />} />
+            <Route path="admin-staff" element={<MgmtAdminStaff />} />
           </Route>
         </Routes>
       </NotificationProvider>

@@ -140,6 +140,50 @@ export async function fetchAdmins() {
   return data
 }
 
+export async function createAdmin(adminData) {
+  const res = await fetch(`${BASE_URL}/admins`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-user-role': 'management' },
+    body: JSON.stringify(adminData),
+  })
+  const payload = await res.json()
+  if (!res.ok) throw new Error(payload?.message ?? 'Failed to create admin')
+  return payload.data
+}
+
+export async function updateAdmin(id, data) {
+  const res = await fetch(`${BASE_URL}/admins/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', 'x-user-role': 'management' },
+    body: JSON.stringify(data),
+  })
+  const payload = await res.json()
+  if (!res.ok) throw new Error(payload?.message ?? 'Failed to update admin')
+  return payload.data
+}
+
+export async function deleteAdmin(id) {
+  const res = await fetch(`${BASE_URL}/admins/${id}`, {
+    method: 'DELETE',
+    headers: { 'x-user-role': 'management' },
+  })
+  if (!res.ok) {
+    const payload = await res.json().catch(() => null)
+    throw new Error(payload?.message ?? 'Failed to delete admin')
+  }
+  return true
+}
+
+export async function toggleAdminStatus(id) {
+  const res = await fetch(`${BASE_URL}/admins/${id}/status`, {
+    method: 'PATCH',
+    headers: { 'x-user-role': 'management' },
+  })
+  const payload = await res.json()
+  if (!res.ok) throw new Error(payload?.message ?? 'Failed to toggle admin status')
+  return payload.data
+}
+
 export async function fetchTasks(params = {}) {
   const search = new URLSearchParams()
   if (params.assignedTo) search.set('assignedTo', params.assignedTo)

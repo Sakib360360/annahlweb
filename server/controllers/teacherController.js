@@ -1,6 +1,7 @@
 import mongoose from 'mongoose'
 import Student from '../models/studentModel.js'
 import Teacher from '../models/teacherModel.js'
+import User from '../models/userModel.js'
 import {
   addTeacher as addTeacherMemory,
   deleteTeacher as deleteTeacherMemory,
@@ -65,6 +66,7 @@ export async function getTeacher(req, res) {
 export async function createTeacher(req, res) {
   const {
     id,
+    username,
     name,
     email,
     phone,
@@ -75,10 +77,11 @@ export async function createTeacher(req, res) {
     address,
     education,
     subject,
+    assignedClass,
     password,
   } = req.body || {}
 
-  if (!id || !name || !email || !subject || !password) {
+  if (!id || !username || !name || !subject || !password) {
     return res.status(400).json({ message: 'Missing required teacher fields' })
   }
 
@@ -87,16 +90,17 @@ export async function createTeacher(req, res) {
   }
 
   try {
-    const existing = await Teacher.findOne({ $or: [{ id }, { email }] })
+    const existing = await Teacher.findOne({ $or: [{ id }, { username }, ...(email ? [{ email }] : [])] })
     if (existing) {
-      return res.status(409).json({ message: 'Teacher ID or email already exists' })
+      return res.status(409).json({ message: 'Teacher ID, username, or email already exists' })
     }
 
     const teacher = new Teacher({
       id,
+      username,
       name,
       role: 'teacher',
-      email,
+      email: email || `${username}@teacher.local`,
       phone,
       photoUrl,
       joinedDate,
@@ -105,10 +109,26 @@ export async function createTeacher(req, res) {
       address,
       education,
       subject,
+      assignedClass,
       password,
     })
 
     const created = await teacher.save()
+
+    await User.findOneAndUpdate(
+      { username },
+      {
+        username,
+        email: email || `${username}@teacher.local`,
+        password,
+        role: 'teacher',
+        name,
+        active: true,
+        profilePhoto: photoUrl || '',
+      },
+      { upsert: true, new: true },
+    )
+
     return res.status(201).json({ data: sanitizeTeacher(created) })
   } catch (error) {
     console.error('createTeacher error', error)
@@ -129,6 +149,21 @@ export async function updateTeacherController(req, res) {
       runValidators: true,
     }).lean()
     if (!updated) return res.status(404).json({ message: 'Teacher not found' })
+
+    await User.findOneAndUpdate(
+      { username: updated.username || updated.id },
+      {
+        username: updated.username || updated.id,
+        email: updated.email,
+        password: updated.password,
+        role: 'teacher',
+        name: updated.name,
+        active: updated.active !== false,
+        profilePhoto: updated.photoUrl || '',
+      },
+      { upsert: true, new: true },
+    )
+
     return res.json({ data: sanitizeTeacher(updated) })
   } catch (error) {
     console.error('updateTeacherController error', error)
@@ -144,6 +179,9 @@ export async function deleteTeacherController(req, res) {
 
     const deleted = await Teacher.findOneAndDelete({ id: req.params.id })
     if (!deleted) return res.status(404).json({ message: 'Teacher not found' })
+
+    await User.findOneAndDelete({ username: deleted.username || deleted.id })
+
     return res.status(204).end()
   } catch (error) {
     console.error('deleteTeacherController error', error)

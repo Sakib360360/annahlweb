@@ -8,15 +8,16 @@ import {
   assignTeacher,
 } from '../controllers/studentController.js'
 import { getStudentProgress } from '../controllers/progressController.js'
+import { requireRoles } from '../middleware/requireRoles.js'
 
 const router = express.Router()
 
 router.get('/', listStudents)
 router.get('/:id', getStudent)
 router.get('/:id/progress', getStudentProgress)
-router.post('/', createStudent)
-router.put('/:id', updateStudentController)
-router.delete('/:id', deleteStudentController)
-router.put('/:id/assign', assignTeacher)
+router.post('/', requireRoles('admin'), createStudent)
+router.put('/:id', requireRoles('admin'), updateStudentController)
+router.delete('/:id', requireRoles('admin'), deleteStudentController)
+router.put('/:id/assign', requireRoles('admin'), assignTeacher)
 
 export default router
