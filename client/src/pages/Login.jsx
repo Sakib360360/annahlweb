@@ -182,11 +182,9 @@ export default function Login() {
 
         <div className="mt-6 rounded-lg border border-white/20 bg-white/70 p-4 text-sm text-slate-600">
           <p>
-            Try these sample IDs:
-            <strong className="block text-slate-800">Student: s1 / student123</strong>
-            <strong className="block text-slate-800">Teacher: t1 / teacher123</strong>
-            <strong className="block text-slate-800">Admin: a1 / a123</strong>
-            <strong className="block text-slate-800">Management: MN01 / MAN001</strong>
+            Student, Teacher, and Admin users are fully database-driven.
+            <strong className="block text-slate-800">Create users from Management/Admin dashboard before first login.</strong>
+            <strong className="block text-slate-800">Management login uses the dedicated Management Login page.</strong>
           </p>
         </div>
       </div>

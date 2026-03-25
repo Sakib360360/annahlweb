@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
   fetchAdmins,
+  fetchAcademicDocs,
   fetchStudentProgress,
   fetchStudents,
   fetchTasks,
@@ -57,6 +58,8 @@ export default function MgmtOverview() {
   const [tasks, setTasks] = useState([])
   const [teacherPerformance, setTeacherPerformance] = useState([])
   const [studentProgressMap, setStudentProgressMap] = useState({})
+  const [activeTab, setActiveTab] = useState('overview')
+  const [academicDocs, setAcademicDocs] = useState([])
 
   useEffect(() => {
     let mounted = true
@@ -65,12 +68,13 @@ export default function MgmtOverview() {
       setLoading(true)
       setError('')
       try {
-        const [studentData, teacherData, adminData, taskData, performanceData] = await Promise.all([
+        const [studentData, teacherData, adminData, taskData, performanceData, docData] = await Promise.all([
           fetchStudents(),
           fetchTeachers(),
           fetchAdmins(),
           fetchTasks(),
           fetchTeacherPerformance(),
+          fetchAcademicDocs(),
         ])
 
         const progressEntries = await Promise.all(
@@ -91,6 +95,7 @@ export default function MgmtOverview() {
         setTasks(taskData)
         setTeacherPerformance(performanceData)
         setStudentProgressMap(Object.fromEntries(progressEntries))
+        setAcademicDocs(docData || [])
       } catch (e) {
         if (!mounted) return
         setError(e.message || 'Failed to load dashboard data')
@@ -192,6 +197,35 @@ export default function MgmtOverview() {
         <p className="mt-1 text-sm text-slate-500">Live data source: API + MongoDB (students, teachers, admins, tasks, progress).</p>
       </div>
 
+      <div className="rounded-2xl border border-slate-200 bg-white p-2 shadow-sm">
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => setActiveTab('overview')}
+            className={`rounded-xl px-4 py-2 text-sm font-semibold transition ${
+              activeTab === 'overview'
+                ? 'bg-brand-600 text-white shadow'
+                : 'bg-white text-slate-700 hover:bg-brand-50'
+            }`}
+          >
+            Overview
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('documents')}
+            className={`rounded-xl px-4 py-2 text-sm font-semibold transition ${
+              activeTab === 'documents'
+                ? 'bg-brand-600 text-white shadow'
+                : 'bg-white text-slate-700 hover:bg-brand-50'
+            }`}
+          >
+            MTP / LTP Docs
+          </button>
+        </div>
+      </div>
+
+      {activeTab === 'overview' && (
+      <>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           label="Total Students"
@@ -335,6 +369,42 @@ export default function MgmtOverview() {
           {teacherPerformance.length === 0 && <p className="text-sm text-slate-400">No teacher performance data available.</p>}
         </div>
       </div>
+      </>
+      )}
+
+      {activeTab === 'documents' && (
+        <div className="rounded-2xl bg-white p-6 shadow-sm">
+          <h2 className="mb-4 text-base font-bold text-slate-800">MTP / LTP Documents</h2>
+          {academicDocs.length === 0 ? (
+            <p className="text-sm text-slate-400">No document links uploaded yet.</p>
+          ) : (
+            <div className="overflow-auto rounded-xl border border-slate-200">
+              <table className="min-w-full text-left text-sm text-slate-700">
+                <thead>
+                  <tr className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                    <th className="px-4 py-3">Type</th>
+                    <th className="px-4 py-3">Session</th>
+                    <th className="px-4 py-3">AP</th>
+                    <th className="px-4 py-3">Link</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {academicDocs.map((doc) => (
+                    <tr key={doc._id || `${doc.type}-${doc.session}-${doc.ap || 'none'}`}>
+                      <td className="px-4 py-3 font-semibold text-slate-800">{doc.type}</td>
+                      <td className="px-4 py-3">{doc.session}</td>
+                      <td className="px-4 py-3">{doc.ap || '-'}</td>
+                      <td className="px-4 py-3">
+                        <a href={doc.link} target="_blank" rel="noreferrer" className="font-semibold text-brand-600 hover:underline">Open PDF</a>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }

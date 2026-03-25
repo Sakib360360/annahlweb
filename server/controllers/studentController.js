@@ -1,14 +1,6 @@
 import mongoose from 'mongoose'
 import Student from '../models/studentModel.js'
 import User from '../models/userModel.js'
-import {
-  addStudent as addStudentMemory,
-  deleteStudent as deleteStudentMemory,
-  getAllStudents as getAllStudentsMemory,
-  getStudentById as getStudentByIdMemory,
-  updateStudent as updateStudentMemory,
-  assignStudentToTeacher as assignStudentToTeacherMemory,
-} from '../models/dataStore.js'
 
 function sanitizeStudent(student) {
   if (!student) return null

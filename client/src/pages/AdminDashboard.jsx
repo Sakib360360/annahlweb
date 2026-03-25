@@ -10,6 +10,7 @@ import {
   deleteStudent,
   deleteTeacher,
   fetchAdmins,
+  fetchAcademicDocs,
   fetchStudents,
   fetchTeachers,
   fetchTeacherPerformance,
@@ -17,6 +18,7 @@ import {
   updateStudent,
   updateTask,
   updateTeacher,
+  upsertAcademicDoc,
 } from '../services/api'
 
 const YEAR_GROUP_OPTIONS = [
@@ -42,6 +44,7 @@ const YEAR_GROUP_OPTIONS = [
 ]
 
 const SESSION_OPTIONS = ['2023-2024', '2024-2025', '2025-2026', '2026-2027']
+const AP_OPTIONS = ['AP1', 'AP2', 'AP3', 'AP4', 'AP5', 'AP6']
 
 const GRADE_TO_GROUP = (grade) => {
   if (!grade) return 'Unknown'
@@ -91,6 +94,16 @@ export default function AdminDashboard() {
   const [taskError, setTaskError] = useState('')
   const [taskFilterStatus, setTaskFilterStatus] = useState('All')
   const [activeTab, setActiveTab] = useState('operations')
+
+  // Documents (LTP / MTP) state
+  const [academicDocs, setAcademicDocs] = useState([])
+  const [ltpSession, setLtpSession] = useState('2024-2025')
+  const [ltpLink, setLtpLink] = useState('')
+  const [mtpSession, setMtpSession] = useState('2024-2025')
+  const [mtpAp, setMtpAp] = useState('AP1')
+  const [mtpLink, setMtpLink] = useState('')
+  const [docSaving, setDocSaving] = useState(false)
+  const [docMsg, setDocMsg] = useState('')
   const [selectedTeacherId, setSelectedTeacherId] = useState('')
   const [studentForm, setStudentForm] = useState({ id: '', name: '', email: '', grade: 'Nursery', phone: '', sessionAdmitted: '2024-2025', password: '' })
   const [teacherForm, setTeacherForm] = useState({
@@ -119,6 +132,7 @@ export default function AdminDashboard() {
     fetchTeachers().then(setTeachers).catch(() => setTeachers([]))
     fetchTeacherPerformance().then(setTeacherPerformance).catch(() => setTeacherPerformance([]))
     fetchAdmins().then(setAdmins).catch(() => setAdmins([]))
+    fetchAcademicDocs().then(setAcademicDocs).catch(() => setAcademicDocs([]))
 
     setTasksLoading(true)
     fetchTasks()
@@ -308,6 +322,42 @@ export default function AdminDashboard() {
     }
   }
 
+  const saveLtpLink = async () => {
+    if (!ltpLink.trim()) { setDocMsg('Please enter a Google Drive link.'); return }
+    setDocSaving(true); setDocMsg('')
+    try {
+      const saved = await upsertAcademicDoc({ type: 'LTP', session: ltpSession, link: ltpLink.trim(), uploadedBy: user?.name || '' })
+      setAcademicDocs((prev) => {
+        const filtered = prev.filter((d) => !(d.type === 'LTP' && d.session === ltpSession))
+        return [...filtered, saved]
+      })
+      setLtpLink('')
+      setDocMsg('LTP link saved successfully.')
+    } catch (err) {
+      setDocMsg(err.message)
+    } finally {
+      setDocSaving(false)
+    }
+  }
+
+  const saveMtpLink = async () => {
+    if (!mtpLink.trim()) { setDocMsg('Please enter a Google Drive link.'); return }
+    setDocSaving(true); setDocMsg('')
+    try {
+      const saved = await upsertAcademicDoc({ type: 'MTP', session: mtpSession, ap: mtpAp, link: mtpLink.trim(), uploadedBy: user?.name || '' })
+      setAcademicDocs((prev) => {
+        const filtered = prev.filter((d) => !(d.type === 'MTP' && d.session === mtpSession && d.ap === mtpAp))
+        return [...filtered, saved]
+      })
+      setMtpLink('')
+      setDocMsg('MTP link saved successfully.')
+    } catch (err) {
+      setDocMsg(err.message)
+    } finally {
+      setDocSaving(false)
+    }
+  }
+
   if (!user) return null
 
   return (
@@ -353,6 +403,17 @@ export default function AdminDashboard() {
               }`}
             >
               My Assigned Tasks
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('documents')}
+              className={`rounded-xl px-4 py-2 text-sm font-semibold transition ${
+                activeTab === 'documents'
+                  ? 'bg-brand-600 text-white shadow'
+                  : 'bg-white text-slate-700 hover:bg-brand-50'
+              }`}
+            >
+              MTP / LTP Docs
             </button>
           </div>
         </div>
@@ -841,6 +902,120 @@ export default function AdminDashboard() {
                 ))}
               </div>
             )}
+          </section>
+        )}
+
+        {activeTab === 'documents' && (
+          <section className="rounded-3xl border border-white/30 bg-white/70 p-8 shadow-soft backdrop-blur">
+            <div>
+              <h2 className="text-xl font-semibold text-brand-900">MTP / LTP Document Links</h2>
+              <p className="mt-1 text-sm text-slate-600">Upload Google Drive PDF links. LTP is per session, MTP is per AP and session.</p>
+            </div>
+
+            {docMsg && <p className="mt-4 text-sm text-brand-700">{docMsg}</p>}
+
+            <div className="mt-6 grid gap-6 lg:grid-cols-2">
+              <div className="rounded-2xl border border-slate-200 bg-white p-5">
+                <h3 className="text-base font-semibold text-brand-900">Upload LTP (per session)</h3>
+                <div className="mt-4 grid gap-3">
+                  <select
+                    value={ltpSession}
+                    onChange={(e) => setLtpSession(e.target.value)}
+                    className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700"
+                  >
+                    {SESSION_OPTIONS.map((session) => (
+                      <option key={session} value={session}>{session}</option>
+                    ))}
+                  </select>
+                  <input
+                    value={ltpLink}
+                    onChange={(e) => setLtpLink(e.target.value)}
+                    placeholder="Google Drive PDF link"
+                    className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700"
+                  />
+                  <button
+                    type="button"
+                    onClick={saveLtpLink}
+                    disabled={docSaving}
+                    className="inline-flex items-center justify-center rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    Save LTP Link
+                  </button>
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-slate-200 bg-white p-5">
+                <h3 className="text-base font-semibold text-brand-900">Upload MTP (per AP)</h3>
+                <div className="mt-4 grid gap-3">
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <select
+                      value={mtpSession}
+                      onChange={(e) => setMtpSession(e.target.value)}
+                      className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700"
+                    >
+                      {SESSION_OPTIONS.map((session) => (
+                        <option key={session} value={session}>{session}</option>
+                      ))}
+                    </select>
+                    <select
+                      value={mtpAp}
+                      onChange={(e) => setMtpAp(e.target.value)}
+                      className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700"
+                    >
+                      {AP_OPTIONS.map((ap) => (
+                        <option key={ap} value={ap}>{ap}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <input
+                    value={mtpLink}
+                    onChange={(e) => setMtpLink(e.target.value)}
+                    placeholder="Google Drive PDF link"
+                    className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700"
+                  />
+                  <button
+                    type="button"
+                    onClick={saveMtpLink}
+                    disabled={docSaving}
+                    className="inline-flex items-center justify-center rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    Save MTP Link
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-5">
+              <h3 className="text-base font-semibold text-brand-900">Available Links</h3>
+              <div className="mt-4 overflow-auto">
+                {!academicDocs.length ? (
+                  <p className="text-sm text-slate-500">No document links uploaded yet.</p>
+                ) : (
+                  <table className="min-w-full text-left text-sm text-slate-700">
+                    <thead>
+                      <tr className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                        <th className="px-3 py-2">Type</th>
+                        <th className="px-3 py-2">Session</th>
+                        <th className="px-3 py-2">AP</th>
+                        <th className="px-3 py-2">Link</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {academicDocs.map((doc) => (
+                        <tr key={doc._id || `${doc.type}-${doc.session}-${doc.ap || 'none'}`} className="border-t border-slate-100">
+                          <td className="px-3 py-2 font-semibold text-slate-800">{doc.type}</td>
+                          <td className="px-3 py-2">{doc.session}</td>
+                          <td className="px-3 py-2">{doc.ap || '-'}</td>
+                          <td className="px-3 py-2">
+                            <a href={doc.link} target="_blank" rel="noreferrer" className="font-semibold text-brand-600 hover:underline">Open PDF</a>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            </div>
           </section>
         )}
       </div>

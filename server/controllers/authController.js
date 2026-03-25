@@ -3,13 +3,6 @@ import Student from '../models/studentModel.js'
 import Teacher from '../models/teacherModel.js'
 import Admin from '../models/adminModel.js'
 import User from '../models/userModel.js'
-import { verifyCredentials as verifyMemoryCredentials } from '../models/dataStore.js'
-
-function verifyAdminMemoryCredentials({ id, email, password }) {
-  const candidate = verifyMemoryCredentials({ id, email, password })
-  if (!candidate || candidate.role !== 'admin') return null
-  return candidate
-}
 
 async function verifyMongoCredentials({ id, email, password }) {
   const value = String(id || '').trim()
@@ -100,10 +93,6 @@ export async function login(req, res) {
 
   if (mongoose.connection.readyState === 1) {
     user = await verifyMongoCredentials({ id, email, password })
-  }
-
-  if (!user) {
-    user = verifyAdminMemoryCredentials({ id, email, password })
   }
 
   if (!user) {

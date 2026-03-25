@@ -251,6 +251,26 @@ export async function addTaskComment(id, comment) {
   return payload.data
 }
 
+// ── Academic Documents (LTP / MTP) ────────────────────────────────────────────
+
+export async function fetchAcademicDocs() {
+  const res = await fetch(`${BASE_URL}/academic-docs`)
+  if (!res.ok) throw new Error('Failed to fetch academic documents')
+  const { data } = await res.json()
+  return data
+}
+
+export async function upsertAcademicDoc(docData) {
+  const res = await fetch(`${BASE_URL}/academic-docs`, {
+    method: 'PUT',
+    headers: withRoleHeader({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify(docData),
+  })
+  const payload = await res.json()
+  if (!res.ok) throw new Error(payload?.message ?? 'Failed to save document link')
+  return payload.data
+}
+
 async function parseJsonResponse(res) {
   try {
     return await res.json()

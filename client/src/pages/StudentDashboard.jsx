@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid, Legend } from 'recharts'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
-import { fetchStudentProgress } from '../services/api'
+import { fetchAcademicDocs, fetchStudentProgress } from '../services/api'
 import { getFromStorage, setInStorage } from '../utils/localStorage'
 
 const SUBJECTS = ['Mathematics', 'English', 'Science', 'History', 'Art']
@@ -133,6 +133,10 @@ export default function StudentDashboard() {
   const [selectedSubject, setSelectedSubject] = useState(null)
   const [messages, setMessages] = useState([])
   const [newMessage, setNewMessage] = useState('')
+  const [activeTab, setActiveTab] = useState('overview')
+  const [academicDocs, setAcademicDocs] = useState([])
+  const [docsLoading, setDocsLoading] = useState(true)
+  const [docsError, setDocsError] = useState('')
 
   useEffect(() => {
     if (user?.role !== 'student') {
@@ -151,6 +155,18 @@ export default function StudentDashboard() {
     }
 
     loadProgress()
+
+    setDocsLoading(true)
+    fetchAcademicDocs()
+      .then((data) => {
+        setAcademicDocs(data || [])
+        setDocsError('')
+      })
+      .catch((err) => {
+        setAcademicDocs([])
+        setDocsError(err?.message || 'Failed to load document links')
+      })
+      .finally(() => setDocsLoading(false))
 
     const stored = getFromStorage(getMessageKey(user.id), [])
     setMessages(stored)
@@ -238,6 +254,34 @@ export default function StudentDashboard() {
           </div>
         </header>
 
+        <div className="rounded-2xl border border-white/30 bg-white/70 p-2 shadow-soft backdrop-blur">
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setActiveTab('overview')}
+              className={`rounded-xl px-4 py-2 text-sm font-semibold transition ${
+                activeTab === 'overview'
+                  ? 'bg-brand-600 text-white shadow'
+                  : 'bg-white text-slate-700 hover:bg-brand-50'
+              }`}
+            >
+              Overview
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('documents')}
+              className={`rounded-xl px-4 py-2 text-sm font-semibold transition ${
+                activeTab === 'documents'
+                  ? 'bg-brand-600 text-white shadow'
+                  : 'bg-white text-slate-700 hover:bg-brand-50'
+              }`}
+            >
+              MTP / LTP Docs
+            </button>
+          </div>
+        </div>
+
+        {activeTab === 'overview' && (
         <section className="grid gap-6 lg:grid-cols-3">
           <div className="rounded-3xl border border-white/30 bg-white/70 p-8 shadow-soft backdrop-blur">
             <h2 className="text-xl font-semibold text-brand-900">Profile</h2>
@@ -415,6 +459,47 @@ export default function StudentDashboard() {
             </div>
           </div>
         </section>
+        )}
+
+        {activeTab === 'documents' && (
+          <section className="rounded-3xl border border-white/30 bg-white/70 p-8 shadow-soft backdrop-blur">
+            <h2 className="text-xl font-semibold text-brand-900">MTP / LTP Documents</h2>
+            <p className="mt-1 text-sm text-slate-600">All available PDF links uploaded by admin.</p>
+
+            {docsError && <p className="mt-4 text-sm text-rose-600">{docsError}</p>}
+
+            {docsLoading ? (
+              <div className="mt-6 rounded-xl border border-slate-200 bg-white p-6 text-sm text-slate-500">Loading documents...</div>
+            ) : academicDocs.length === 0 ? (
+              <div className="mt-6 rounded-xl border border-slate-200 bg-white p-6 text-sm text-slate-500">No document links uploaded yet.</div>
+            ) : (
+              <div className="mt-6 overflow-auto rounded-xl border border-slate-200 bg-white">
+                <table className="min-w-full text-left text-sm text-slate-700">
+                  <thead>
+                    <tr className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                      <th className="px-4 py-3">Type</th>
+                      <th className="px-4 py-3">Session</th>
+                      <th className="px-4 py-3">AP</th>
+                      <th className="px-4 py-3">Link</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {academicDocs.map((doc) => (
+                      <tr key={doc._id || `${doc.type}-${doc.session}-${doc.ap || 'none'}`}>
+                        <td className="px-4 py-3 font-semibold text-slate-800">{doc.type}</td>
+                        <td className="px-4 py-3">{doc.session}</td>
+                        <td className="px-4 py-3">{doc.ap || '-'}</td>
+                        <td className="px-4 py-3">
+                          <a href={doc.link} target="_blank" rel="noreferrer" className="font-semibold text-brand-600 hover:underline">Open PDF</a>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
+        )}
       </div>
     </main>
   )
