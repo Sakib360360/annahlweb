@@ -25,22 +25,45 @@ if (!MONGODB_URI) {
 
 console.log('Mongo connection URI in use:', MONGO_CONNECTION_URI.replace(/(mongodb\+srv:\/\/.*?:).*?@/, '$1***@'))
 
-mongoose
-  .connect(MONGO_CONNECTION_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
-  .then(() => {
-    console.log('MongoDB connected successfully')
-  })
-  .catch((error) => {
-    console.error('MongoDB connection error:', error)
+let mongoConnectPromise = null
+
+async function ensureMongoConnection() {
+  if (mongoose.connection.readyState === 1) return
+
+  if (!mongoConnectPromise) {
+    mongoConnectPromise = mongoose
+      .connect(MONGO_CONNECTION_URI)
+      .then(() => {
+        console.log('MongoDB connected successfully')
+      })
+      .catch((error) => {
+        console.error('MongoDB connection error:', error)
+        mongoConnectPromise = null
+        throw error
+      })
+  }
+
+  await mongoConnectPromise
+}
+
+ensureMongoConnection().catch(() => {
+  if (!process.env.VERCEL) {
     console.error('MongoDB is required; shutting down to avoid in-memory fallback data loss.')
     process.exit(1)
-  })
+  }
+})
 
 app.use(cors({ origin: true }))
 app.use(express.json())
+
+app.use(async (req, res, next) => {
+  try {
+    await ensureMongoConnection()
+    next()
+  } catch {
+    res.status(503).json({ message: 'Database unavailable. Please try again shortly.' })
+  }
+})
 
 app.get('/', (req, res) => {
   res.json({ message: 'An Nahl Academy API is running' })
