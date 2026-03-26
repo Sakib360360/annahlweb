@@ -53,7 +53,7 @@ export async function fetchTeacher(id) {
 export async function createStudent(student) {
   const res = await fetch(`${BASE_URL}/students`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: withRoleHeader({ 'Content-Type': 'application/json' }),
     body: JSON.stringify(student),
   })
   const payload = await res.json()
@@ -64,7 +64,7 @@ export async function createStudent(student) {
 export async function updateStudent(id, data) {
   const res = await fetch(`${BASE_URL}/students/${id}`, {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
+    headers: withRoleHeader({ 'Content-Type': 'application/json' }),
     body: JSON.stringify(data),
   })
   const payload = await res.json()
@@ -75,6 +75,7 @@ export async function updateStudent(id, data) {
 export async function deleteStudent(id) {
   const res = await fetch(`${BASE_URL}/students/${id}`, {
     method: 'DELETE',
+    headers: withRoleHeader(),
   })
   if (!res.ok) {
     const payload = await res.json().catch(() => null)
@@ -86,7 +87,7 @@ export async function deleteStudent(id) {
 export async function createTeacher(teacher) {
   const res = await fetch(`${BASE_URL}/teachers`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: withRoleHeader({ 'Content-Type': 'application/json' }),
     body: JSON.stringify(teacher),
   })
   const payload = await res.json()
@@ -97,7 +98,7 @@ export async function createTeacher(teacher) {
 export async function updateTeacher(id, data) {
   const res = await fetch(`${BASE_URL}/teachers/${id}`, {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
+    headers: withRoleHeader({ 'Content-Type': 'application/json' }),
     body: JSON.stringify(data),
   })
   const payload = await res.json()
@@ -108,6 +109,7 @@ export async function updateTeacher(id, data) {
 export async function deleteTeacher(id) {
   const res = await fetch(`${BASE_URL}/teachers/${id}`, {
     method: 'DELETE',
+    headers: withRoleHeader(),
   })
   if (!res.ok) {
     const payload = await res.json().catch(() => null)
@@ -119,7 +121,7 @@ export async function deleteTeacher(id) {
 export async function assignStudentToTeacher(studentId, teacherId) {
   const res = await fetch(`${BASE_URL}/students/${studentId}/assign`, {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
+    headers: withRoleHeader({ 'Content-Type': 'application/json' }),
     body: JSON.stringify({ teacherId }),
   })
   const payload = await res.json()
@@ -140,7 +142,7 @@ export async function fetchStudentProgress(studentId) {
 export async function upsertStudentProgress(teacherId, studentId, progress) {
   const res = await fetch(`${BASE_URL}/teachers/${teacherId}/students/${studentId}/progress`, {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
+    headers: withRoleHeader({ 'Content-Type': 'application/json' }),
     body: JSON.stringify(progress),
   })
   const payload = await res.json()

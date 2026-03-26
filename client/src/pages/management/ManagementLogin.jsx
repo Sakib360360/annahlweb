@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { MANAGEMENT_CREDENTIALS } from '../../data/managementData'
+import { useAuth } from '../../auth/AuthProvider'
 
 function EyeIcon({ open }) {
   return open ? (
@@ -22,28 +22,31 @@ export default function ManagementLogin() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
+  const { login, logout } = useAuth()
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
     setError('')
     setLoading(true)
-    setTimeout(() => {
-      const inputUsername = username.trim().toUpperCase()
-      const inputPassword = password.trim()
-      const expectedUsername = String(MANAGEMENT_CREDENTIALS.username || '').trim().toUpperCase()
-      const expectedPassword = String(MANAGEMENT_CREDENTIALS.password || '').trim()
 
-      if (
-        inputUsername === expectedUsername &&
-        inputPassword === expectedPassword
-      ) {
-        localStorage.setItem('mgmt_session', JSON.stringify({ username: expectedUsername, loginAt: Date.now() }))
-        navigate('/management/overview', { replace: true })
-      } else {
-        setError('Invalid username or password. Please try again.')
-        setLoading(false)
+    try {
+      const response = await login({ id: username.trim().toLowerCase(), password: password.trim() })
+      if (response?.user?.role !== 'management') {
+        logout()
+        setError('This account is not a management account.')
+        return
       }
-    }, 700)
+
+      localStorage.setItem(
+        'mgmt_session',
+        JSON.stringify({ username: response.user.username || response.user.id || username.trim(), loginAt: Date.now() }),
+      )
+      navigate('/management/overview', { replace: true })
+    } catch (err) {
+      setError(err?.message || 'Invalid username or password. Please try again.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -137,17 +140,17 @@ export default function ManagementLogin() {
             </button>
           </form>
 
-          {/* Test Credentials */}
+          {/* Management Credentials */}
           <div className="mt-6 rounded-xl bg-gold-500/10 border border-gold-400/25 p-4">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-gold-400">Test Credentials</p>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-gold-400">Management Credentials</p>
             <div className="space-y-1 text-sm text-slate-300">
               <div className="flex justify-between">
                 <span className="text-slate-400">Username</span>
-                <span className="font-mono font-semibold text-white">MN01</span>
+                <span className="font-mono font-semibold text-white">sakib</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-400">Password</span>
-                <span className="font-mono font-semibold text-white">MAN001</span>
+                <span className="font-mono font-semibold text-white">sakib01</span>
               </div>
             </div>
           </div>

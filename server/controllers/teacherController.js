@@ -58,7 +58,7 @@ export async function getTeacher(req, res) {
 export async function createTeacher(req, res) {
   const {
     id,
-    username,
+    username: inputUsername,
     name,
     email,
     phone,
@@ -72,6 +72,8 @@ export async function createTeacher(req, res) {
     assignedClass,
     password,
   } = req.body || {}
+
+  const username = String(inputUsername || id || '').trim()
 
   if (!id || !username || !name || !subject || !password) {
     return res.status(400).json({ message: 'Missing required teacher fields' })

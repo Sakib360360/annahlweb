@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react'
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
-import { getFromStorage } from '../utils/localStorage'
 import {
   assignStudentToTeacher,
   createStudent,
@@ -11,6 +10,7 @@ import {
   deleteTeacher,
   fetchAdmins,
   fetchAcademicDocs,
+  fetchStudentProgress,
   fetchStudents,
   fetchTeachers,
   fetchTeacherPerformance,
@@ -55,15 +55,41 @@ const GRADE_TO_GROUP = (grade) => {
   return 'Unknown'
 }
 
-const getTeacherStudentStorageKey = (teacherId, studentId) => `anahl:teacher:${teacherId}:student:${studentId}`
+function hasAnyProgress(progress) {
+  const apData = progress?.ap
+  if (!apData) return false
+  return Object.values(apData).some((ap) =>
+    (ap?.weeks || []).some((week) =>
+      (week?.days || []).some((day) => {
+        const subjects = day?.subjects
+        return subjects && Object.keys(subjects).length > 0 && Object.values(subjects).some(Boolean)
+      }),
+    ),
+  )
+}
 
-const computeCompletion = (teacher, assignedStudents) => {
-  if (!assignedStudents.length) return 0
-  const completed = assignedStudents.filter((student) => {
-    const data = getFromStorage(getTeacherStudentStorageKey(teacher.id, student.id), null)
-    return data && Array.isArray(data.dailyGrades) && data.dailyGrades.some((grade) => grade)
-  }).length
-  return Math.round((completed / assignedStudents.length) * 100)
+function computeProgressAverage(progress) {
+  const apData = progress?.ap
+  if (!apData) return 0
+
+  const gradeMap = { EM: 1, S: 2, B: 3, EX: 4, E: 1, U: 1 }
+  const all = []
+
+  Object.values(apData).forEach((ap) => {
+    ;(ap?.weeks || []).forEach((week) => {
+      ;(week?.days || []).forEach((day) => {
+        const subjects = day?.subjects || {}
+        Object.values(subjects).forEach((value) => {
+          const normalized = String(value || '').trim().toUpperCase()
+          const point = gradeMap[normalized] || 0
+          if (point > 0) all.push(point)
+        })
+      })
+    })
+  })
+
+  if (!all.length) return 0
+  return Number((all.reduce((sum, value) => sum + value, 0) / all.length).toFixed(2))
 }
 
 const TASK_STATUSES = ['Pending', 'Ongoing', 'In Progress', 'Completed', 'Done']
@@ -94,6 +120,7 @@ export default function AdminDashboard() {
   const [taskError, setTaskError] = useState('')
   const [taskFilterStatus, setTaskFilterStatus] = useState('All')
   const [activeTab, setActiveTab] = useState('operations')
+  const [progressByStudent, setProgressByStudent] = useState({})
 
   // Documents (LTP / MTP) state
   const [academicDocs, setAcademicDocs] = useState([])
@@ -147,6 +174,36 @@ export default function AdminDashboard() {
       .finally(() => setTasksLoading(false))
   }, [user, navigate])
 
+  useEffect(() => {
+    let mounted = true
+
+    async function loadProgress() {
+      const entries = await Promise.all(
+        students.map(async (student) => {
+          try {
+            const progress = await fetchStudentProgress(student.id)
+            return [student.id, progress]
+          } catch {
+            return [student.id, null]
+          }
+        }),
+      )
+
+      if (!mounted) return
+      setProgressByStudent(Object.fromEntries(entries))
+    }
+
+    if (students.length) {
+      loadProgress()
+    } else {
+      setProgressByStudent({})
+    }
+
+    return () => {
+      mounted = false
+    }
+  }, [students])
+
   const myAdminProfile = useMemo(() => {
     if (!user) return null
     return admins.find((admin) => {
@@ -176,32 +233,24 @@ export default function AdminDashboard() {
   const groupedTeachers = useMemo(() => {
     return teachers.map((teacher) => {
       const assigned = students.filter((student) => student.teacherId === teacher.id)
+      const withProgress = assigned.filter((student) => hasAnyProgress(progressByStudent[student.id])).length
       return {
         ...teacher,
         assignedCount: assigned.length,
-        completion: computeCompletion(teacher, assigned),
+        completion: assigned.length ? Math.round((withProgress / assigned.length) * 100) : 0,
       }
     })
-  }, [teachers, students])
+  }, [teachers, students, progressByStudent])
 
   const studentOverviewData = useMemo(() => {
     return students.map((student) => {
-      const progress = getFromStorage(`anahl:progress:${student.id}`, null)
-      const total = (progress?.subjects || []).reduce((acc, subject) => {
-        const subjectTotal = (subject.ap || []).reduce((sum, ap) => {
-          const score = Math.round(ap.formative * 0.8 + ap.summative * 0.2)
-          return sum + score
-        }, 0)
-        return acc + subjectTotal
-      }, 0)
-      const count = (progress?.subjects || []).reduce((acc, subject) => acc + (subject.ap?.length || 0), 0)
-      const average = count ? Math.round(total / count) : 0
+      const average = computeProgressAverage(progressByStudent[student.id])
       return {
         name: student.name,
-        grade: average / 25, // scale 0-4
+        grade: average, // scale 0-4
       }
     })
-  }, [students])
+  }, [students, progressByStudent])
 
   const createNewStudent = async () => {
     setError('')

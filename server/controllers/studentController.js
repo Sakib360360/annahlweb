@@ -53,7 +53,7 @@ export async function getStudent(req, res) {
 export async function createStudent(req, res) {
   const {
     id,
-    username,
+    username: inputUsername,
     name,
     email,
     grade,
@@ -67,6 +67,8 @@ export async function createStudent(req, res) {
     sessionAdmitted,
     teacherId,
   } = req.body || {}
+  const username = String(inputUsername || id || '').trim()
+
   if (!id || !username || !name || !grade || !password) {
     return res.status(400).json({ message: 'Missing required student fields' })
   }

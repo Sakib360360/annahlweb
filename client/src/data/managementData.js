@@ -1,8 +1,3 @@
-export const MANAGEMENT_CREDENTIALS = {
-  username: 'MN01',
-  password: 'MAN001',
-}
-
 export const managementLeaders = [
   { id: 'm1', name: 'Engr. Shahedul Hossen Shahed', title: 'Chairman' },
   { id: 'm2', name: 'Dr. Abul Kalam Azad', title: 'Principal' },

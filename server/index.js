@@ -14,14 +14,11 @@ const app = express()
 
 const { MONGODB_URI } = process.env
 
-// use a stable DB name so data persists explicitly, not test db
-const defaultUri = 'mongodb+srv://saakibabrar_db_user_nahlweb:j1e7LynqW0ijWi7K@cluster0.fcoywyu.mongodb.net/anahl?retryWrites=true&w=majority'
-
-const MONGO_CONNECTION_URI = MONGODB_URI || defaultUri
-
 if (!MONGODB_URI) {
-  console.warn('MONGODB_URI not set in env. Using default hardcoded DB URI (mongo db: anahl).')
+  throw new Error('MONGODB_URI is required. Set it in environment variables for local and production.')
 }
+
+const MONGO_CONNECTION_URI = MONGODB_URI
 
 console.log('Mongo connection URI in use:', MONGO_CONNECTION_URI.replace(/(mongodb\+srv:\/\/.*?:).*?@/, '$1***@'))
 

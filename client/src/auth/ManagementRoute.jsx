@@ -11,7 +11,7 @@ export default function ManagementRoute({ children }) {
       if (parsed?.user?.role === 'management') {
         localStorage.setItem(
           'mgmt_session',
-          JSON.stringify({ username: parsed.user.id || 'MN01', loginAt: Date.now() }),
+          JSON.stringify({ username: parsed.user.username || parsed.user.id || '', loginAt: Date.now() }),
         )
         return children
       }
