@@ -9,6 +9,7 @@ import teacherRoutes from './routes/teacherRoutes.js'
 import adminRoutes from './routes/adminRoutes.js'
 import taskRoutes from './routes/taskRoutes.js'
 import academicDocRoutes from './routes/academicDocRoutes.js'
+import contactRoutes from './routes/contactRoutes.js'
 
 const app = express()
 
@@ -72,6 +73,7 @@ app.use('/api/teachers', teacherRoutes)
 app.use('/api/admins', adminRoutes)
 app.use('/api/tasks', taskRoutes)
 app.use('/api/academic-docs', academicDocRoutes)
+app.use('/api/contact', contactRoutes)
 
 const PORT = process.env.PORT || 5001
 

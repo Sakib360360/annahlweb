@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import anNahlLogo from '../../assets/An-Nahl-Logo.png'
 
 const navItems = [
   {
@@ -96,7 +97,7 @@ export default function ManagementLayout() {
         <div className="flex h-16 items-center justify-between border-b border-slate-700 px-4">
           {sidebarOpen && (
             <div className="flex items-center gap-2 overflow-hidden">
-              <img src="/logo.png" alt="" className="h-9 w-9 flex-shrink-0 object-contain" />
+              <img src={anNahlLogo} alt="" className="h-9 w-9 flex-shrink-0 object-contain" />
               <span className="truncate text-sm font-bold tracking-wide">An-Nahl Academy</span>
             </div>
           )}

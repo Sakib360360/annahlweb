@@ -2,6 +2,7 @@ import { Link, NavLink } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import NotificationBell from './notifications/NotificationBell'
 import { useAuth } from '../auth/AuthProvider'
+import anNahlLogo from '../assets/An-Nahl-Logo.png'
 
 const navItems = [
   { label: 'Home', to: '/' },
@@ -50,7 +51,7 @@ export default function Navbar() {
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
         <Link to="/" className="inline-flex items-center gap-3 group">
           <img
-            src="/logo.png"
+            src={anNahlLogo}
             alt="An-Nahl Academy Logo"
             className="h-14 w-14 object-contain drop-shadow-md transition-transform duration-300 group-hover:scale-105"
           />

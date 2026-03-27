@@ -1,14 +1,16 @@
 import { useState } from 'react'
+import { submitContactMessage } from '../services/api'
 
 export default function ContactForm() {
   const [form, setForm] = useState({ name: '', email: '', message: '' })
   const [status, setStatus] = useState({ type: '', message: '' })
+  const [loading, setLoading] = useState(false)
 
   const handleChange = (key) => (event) => {
     setForm((prev) => ({ ...prev, [key]: event.target.value }))
   }
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault()
 
     if (!form.name || !form.email || !form.message) {
@@ -16,8 +18,17 @@ export default function ContactForm() {
       return
     }
 
-    setStatus({ type: 'success', message: 'Thanks for reaching out! We will respond soon.' })
-    setForm({ name: '', email: '', message: '' })
+    setLoading(true)
+    setStatus({ type: '', message: '' })
+    try {
+      await submitContactMessage(form)
+      setStatus({ type: 'success', message: 'Thanks for reaching out! Your message has been sent.' })
+      setForm({ name: '', email: '', message: '' })
+    } catch (error) {
+      setStatus({ type: 'error', message: error?.message || 'Failed to send message. Please try again.' })
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -93,9 +104,10 @@ export default function ContactForm() {
         <button
           type="submit"
           title="Submit contact form"
+          disabled={loading}
           className="inline-flex items-center justify-center rounded-xl bg-brand-600 px-6 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-brand-700"
         >
-          Submit
+          {loading ? 'Sending...' : 'Submit'}
         </button>
       </div>
     </form>

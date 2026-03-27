@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../auth/AuthProvider'
+import anNahlLogo from '../../assets/An-Nahl-Logo.png'
+import Navbar from '../../components/Navbar'
 
 function EyeIcon({ open }) {
   return open ? (
@@ -50,24 +52,26 @@ export default function ManagementLogin() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-brand-900 flex items-center justify-center p-4">
-      {/* Background decoration */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 h-96 w-96 rounded-full bg-brand-600/10 blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 h-96 w-96 rounded-full bg-gold-500/10 blur-3xl" />
-      </div>
-
-      <div className="relative w-full max-w-md">
-        {/* Logo & Title */}
-        <div className="mb-8 text-center">
-          <img src="/logo.png" alt="An-Nahl Academy" className="mx-auto mb-4 h-20 w-20 object-contain drop-shadow-xl" />
-          <h1 className="text-2xl font-bold text-white">Management Dashboard</h1>
-          <p className="mt-1 text-sm text-slate-400">An-Nahl Academy — Authorised Access Only</p>
+    <>
+      <Navbar />
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-brand-900 flex items-center justify-center p-4">
+        {/* Background decoration */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-40 -right-40 h-96 w-96 rounded-full bg-brand-600/10 blur-3xl" />
+          <div className="absolute -bottom-40 -left-40 h-96 w-96 rounded-full bg-gold-500/10 blur-3xl" />
         </div>
 
-        {/* Card */}
-        <div className="rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 p-8 shadow-2xl">
-          <h2 className="mb-6 text-center text-lg font-semibold text-white">Sign in to continue</h2>
+        <div className="relative w-full max-w-md">
+          {/* Logo & Title */}
+          <div className="mb-8 text-center">
+            <img src={anNahlLogo} alt="An-Nahl Academy" className="mx-auto mb-4 h-20 w-20 object-contain drop-shadow-xl" />
+            <h1 className="text-2xl font-bold text-white">Management Dashboard</h1>
+            <p className="mt-1 text-sm text-slate-400">An-Nahl Academy — Authorised Access Only</p>
+          </div>
+
+          {/* Card */}
+          <div className="rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 p-8 shadow-2xl">
+            <h2 className="mb-6 text-center text-lg font-semibold text-white">Sign in to continue</h2>
 
           {error && (
             <div className="mb-4 rounded-lg bg-red-500/20 border border-red-400/30 px-4 py-3 text-sm text-red-300">
@@ -140,26 +144,27 @@ export default function ManagementLogin() {
             </button>
           </form>
 
-          {/* Management Credentials */}
-          <div className="mt-6 rounded-xl bg-gold-500/10 border border-gold-400/25 p-4">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-gold-400">Management Credentials</p>
-            <div className="space-y-1 text-sm text-slate-300">
-              <div className="flex justify-between">
-                <span className="text-slate-400">Username</span>
-                <span className="font-mono font-semibold text-white">sakib</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-400">Password</span>
-                <span className="font-mono font-semibold text-white">sakib01</span>
+            {/* Management Credentials */}
+            <div className="mt-6 rounded-xl bg-gold-500/10 border border-gold-400/25 p-4">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-gold-400">Management Credentials</p>
+              <div className="space-y-1 text-sm text-slate-300">
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Username</span>
+                  <span className="font-mono font-semibold text-white">sakib</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Password</span>
+                  <span className="font-mono font-semibold text-white">sakib01</span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <p className="mt-6 text-center text-xs text-slate-500">
-          This portal is restricted to authorised management personnel only.
-        </p>
+          <p className="mt-6 text-center text-xs text-slate-500">
+            This portal is restricted to authorised management personnel only.
+          </p>
+        </div>
       </div>
-    </div>
+    </>
   )
 }

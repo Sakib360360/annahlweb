@@ -273,6 +273,17 @@ export async function upsertAcademicDoc(docData) {
   return payload.data
 }
 
+export async function submitContactMessage(contactData) {
+  const res = await fetch(`${BASE_URL}/contact`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(contactData),
+  })
+  const payload = await res.json().catch(() => null)
+  if (!res.ok) throw new Error(payload?.message ?? 'Failed to send message')
+  return payload
+}
+
 async function parseJsonResponse(res) {
   try {
     return await res.json()
